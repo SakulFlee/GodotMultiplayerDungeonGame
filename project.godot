@@ -10,23 +10,24 @@ config_version=5
 
 [application]
 
-config/name="Godot WebRTC Demo Project"
-config/version="1.0.1"
+config/name="GodotMultiplayerDungeonGame"
+config/version="1.0.0"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.2", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
 [audio]
 
+buses/default_bus_layout=""
 driver/enable_input=true
 
 [dotnet]
 
-project/assembly_name="WebRTC Match Maker Godot Project"
+project/assembly_name="GodotMultiplayerDungeonGame"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/match_maker/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")
+enabled=PackedStringArray()
 
 [input]
 

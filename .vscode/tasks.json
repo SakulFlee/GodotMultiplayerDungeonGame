@@ -2,38 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "[Match Maker] Build Server (Debug)",
-            "command": "cargo build",
-            "type": "shell",
-            "args": [],
-            "options": {
-                "cwd": "${workspaceFolder}/Match Maker Server/"
-            },
-            "problemMatcher": [
-                "$rustc"
-            ],
-            "group": "build"
-        },
-        {
-            "label": "[Match Maker] Build Server (Release)",
-            "command": "cargo build --release",
-            "type": "shell",
-            "args": [],
-            "options": {
-                "cwd": "${workspaceFolder}/Match Maker Server/"
-            },
-            "problemMatcher": [
-                "$rustc"
-            ],
-            "group": "build"
-        },
-        {
             "label": "[Godot] Prepare Solution",
             "type": "shell",
             "command": "godot --headless --build-solutions --quit || exit 0",
             "args": [],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             },
         },
         {
@@ -42,7 +16,7 @@
             "command": "dotnet restore",
             "args": [],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             },
             "dependsOn": "[Godot] Prepare Solution"
         },
@@ -52,7 +26,7 @@
             "command": "dotnet build",
             "args": [],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             },
             "group": "build",
             "dependsOn": "[Godot] Restore Project"
@@ -66,7 +40,7 @@
             },
             "args": [],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
@@ -83,7 +57,7 @@
                 "Exports/Windows/Debug/DemoProject.exe"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             },
             "group": "build",
             "dependsOn": "[Godot] Prepare Export Directory"
@@ -102,7 +76,7 @@
                 "Exports/Windows/Release/DemoProject.exe"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             },
             "group": "build",
             "dependsOn": "[Godot] Prepare Export Directory"
@@ -121,7 +95,7 @@
                 "Exports/Linux/Debug/DemoProject"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             },
             "group": "build",
             "dependsOn": "[Godot] Prepare Export Directory"
@@ -140,7 +114,7 @@
                 "Exports/Linux/Release/DemoProject"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/Godot Project/"
+                "cwd": "${workspaceFolder}"
             },
             "group": "build",
             "dependsOn": "[Godot] Prepare Export Directory"

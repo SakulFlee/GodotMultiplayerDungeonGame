@@ -44,6 +44,9 @@ jobs:
         with:
           dotnet-version: ${{ env.CSharpVersion }}
 
+      - name: Remove godot syslink if it exists
+        run: rm /github/home/bin/godot || true
+
       - uses: chickensoft-games/setup-godot@v1
         name: Setup Godot
         with:

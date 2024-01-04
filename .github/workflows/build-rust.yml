@@ -23,12 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Rust
-        run: |
-          rustup install ${{ matrix.rust-channel }}
-          rustup show
-          rustup --version
-          cargo +${{ matrix.rust-channel }} --version
-          rustc +${{ matrix.rust-channel }} --version
+        run: curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable
 
       - name: Debug Build
         run: cargo build

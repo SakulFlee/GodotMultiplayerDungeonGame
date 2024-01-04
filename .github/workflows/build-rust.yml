@@ -26,7 +26,7 @@ jobs:
         run: apt update && apt install -y curl
 
       - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable
+        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
 
       - name: Release Build
         run: cargo build --release

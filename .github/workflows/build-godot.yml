@@ -50,14 +50,9 @@ jobs:
           # Use .NET-enabled version of Godot (the default is also true).
           use-dotnet: true
 
-      - name: Restore Dependencies
-        run: dotnet restore
-        working-directory: Godot Project/
-
-      - name: Generate .NET Bindings
-        run: godot --headless --build-solutions --quit || exit 0
-        working-directory: Godot Project/
-
       - name: Build Project
-        run: dotnet build
-        working-directory: Godot Project/
+        run: |
+          cd "Godot Project"
+          dotnet restore
+          godot --headless --build-solutions --quit || exit 0
+          dotnet build

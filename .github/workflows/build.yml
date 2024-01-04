@@ -66,38 +66,38 @@ jobs:
           godot --headless --build-solutions --quit || exit 0
           dotnet build
 
-  build-rust:
-    strategy:
-      fail-fast: false
-      matrix:
-        rust-channel: ["stable"]
+  # build-rust:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       rust-channel: ["stable"]
 
-    runs-on: self-hosted
-    container: ubuntu:lunar-20231128
+  #   runs-on: self-hosted
+  #   container: ubuntu:lunar-20231128
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: APT update
-        run: apt update
+  #     - name: APT update
+  #       run: apt update
 
-      - name: APT install cURL
-        run: apt install -y curl
+  #     - name: APT install cURL
+  #       run: apt install -y curl
 
-      - name: APT install build-essential
-        run: apt install -y build-essential
+  #     - name: APT install build-essential
+  #       run: apt install -y build-essential
 
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
+  #     - name: Install Rust
+  #       run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
 
-      - name: Release Build
-        run: |
-          cd "Match Maker Server"
-          source "$HOME/.cargo/env"
-          cargo build --release
+  #     - name: Release Build
+  #       run: |
+  #         cd "Match Maker Server"
+  #         source "$HOME/.cargo/env"
+  #         cargo build --release
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Match Maker Server
-          path: Match Maker Server/target/release/match_maker_server-${{ matrix.rust-channel }}
+  #     - name: Upload build artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: Match Maker Server
+  #         path: Match Maker Server/target/release/match_maker_server-${{ matrix.rust-channel }}

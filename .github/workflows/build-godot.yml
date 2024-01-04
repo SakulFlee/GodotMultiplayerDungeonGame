@@ -28,8 +28,14 @@ jobs:
       - uses: actions/checkout@v4
         name: Checkout
 
-      - name: Install cURL
-        run: apt update && apt install -y curl
+      - name: APT update
+        run: apt update
+
+      - name: APT install cURL
+        run: apt install -y curl
+
+      - name: APT install unzip
+        run: apt install -y unzip
 
       - uses: actions/setup-dotnet@v4
         name: Setup .NET SDK

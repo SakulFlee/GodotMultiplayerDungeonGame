@@ -29,8 +29,9 @@ jobs:
         run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
 
       - name: Release Build
-        run: cargo build --release
-        working-directory: "Match Maker Server/"
+        run: |
+          cd 'Match Maker Server'
+          cargo build --release
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

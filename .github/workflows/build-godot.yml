@@ -21,7 +21,6 @@ jobs:
 
     defaults:
       run:
-        # Use bash shells on all platforms.
         shell: bash
 
     steps:

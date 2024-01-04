@@ -8,3 +8,6 @@ jobs:
   container-test-job:
     runs-on: self-hosted
     container: hello-world
+    steps:
+      - run: uname -a
+      - run: cat /proc/1/cgroup

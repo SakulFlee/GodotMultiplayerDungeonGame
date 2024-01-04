@@ -37,8 +37,8 @@ jobs:
       - name: APT install unzip
         run: apt install -y unzip
 
-      - name: APT install libicu
-        run: apt install -y libicu
+      - name: APT install libicu-dev
+        run: apt install -y libicu-dev
 
       - uses: actions/setup-dotnet@v4
         name: Setup .NET SDK

@@ -30,7 +30,7 @@ jobs:
 
       - name: Release Build
         run: cargo build --release
-        working-directory: Match Maker Server/
+        working-directory: "Match Maker Server/"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

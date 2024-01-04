@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main"]
 
+env:
+  CSharpVersion: 8.0.x
+
 jobs:
   build:
     strategy:
@@ -28,10 +31,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         name: Setup .NET SDK
         with:
-          dotnet-version: 8.0.x
-
-      - name: .NET Version
-        run: dotnet --version
+          dotnet-version: ${{ env.CSharpVersion }}
 
       - uses: chickensoft-games/setup-godot@v1
         name: Setup Godot
@@ -41,9 +41,6 @@ jobs:
           # Use .NET-enabled version of Godot (the default is also true).
           use-dotnet: true
 
-      - name: Godot Version
-        run: godot --version
-
       - name: Restore Dependencies
         run: dotnet restore
         working-directory: Godot Project/
@@ -52,6 +49,6 @@ jobs:
         run: godot --headless --build-solutions --quit || exit 0
         working-directory: Godot Project/
 
-      - name: Build Projects
+      - name: Build Project
         run: dotnet build
         working-directory: Godot Project/

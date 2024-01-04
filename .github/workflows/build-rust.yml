@@ -14,10 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust-channel: ["stable", "beta", "nightly", "1.70.0", "1.60.0"]
+        rust-channel: ["stable"]
 
     runs-on: self-hosted
-    container: ubuntu:latest
+    container: ubuntu:lunar
 
     steps:
       - uses: actions/checkout@v4

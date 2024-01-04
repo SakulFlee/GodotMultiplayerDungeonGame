@@ -26,8 +26,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install cURL
-        run: apt update && apt install -y curl
+      - name: APT update
+        run: apt update
+
+      - name: APT install cURL
+        run: apt install -y curl
+        
+      - name: APT install build-essentials
+        run: apt install -y build-essentials
 
       - name: Install Rust
         run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable

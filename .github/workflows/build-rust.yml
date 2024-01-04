@@ -30,7 +30,8 @@ jobs:
 
       - name: Release Build
         run: |
-          cd 'Match Maker Server'
+          cd "Match Maker Server"
+          source "$HOME/.cargo/env"
           cargo build --release
 
       - name: Upload build artifacts

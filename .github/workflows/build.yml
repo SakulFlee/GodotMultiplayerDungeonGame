@@ -6,11 +6,16 @@ on:
   pull_request:
     branches: ["main"]
 
+defaults:
+  run:
+    shell: bash
+
 env:
+  CARGO_TERM_COLOR: always
   CSharpVersion: 8.0.x
 
 jobs:
-  build:
+  godot-build:
     strategy:
       fail-fast: false
       matrix:
@@ -18,10 +23,6 @@ jobs:
 
     runs-on: self-hosted
     container: ubuntu:lunar-20231128
-
-    defaults:
-      run:
-        shell: bash
 
     steps:
       - uses: actions/checkout@v4
@@ -64,3 +65,39 @@ jobs:
           dotnet restore
           godot --headless --build-solutions --quit || exit 0
           dotnet build
+
+  rust-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-channel: ["stable"]
+
+    runs-on: self-hosted
+    container: ubuntu:lunar-20231128
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: APT update
+        run: apt update
+
+      - name: APT install cURL
+        run: apt install -y curl
+
+      - name: APT install build-essential
+        run: apt install -y build-essential
+
+      - name: Install Rust
+        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
+
+      - name: Release Build
+        run: |
+          cd "Match Maker Server"
+          source "$HOME/.cargo/env"
+          cargo build --release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Match Maker Server
+          path: Match Maker Server/target/release/match_maker_server-${{ matrix.rust-channel }}

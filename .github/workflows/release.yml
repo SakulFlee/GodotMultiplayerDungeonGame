@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - "v*"
-  workflow_dispatch: 
+  workflow_dispatch:
 
 env:
   GODOT_VERSION: 4.2.0
@@ -17,7 +17,8 @@ jobs:
       matrix:
         export-template: [windows, linux]
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container: ubuntu:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +54,7 @@ jobs:
       - name: Build Projects
         run: dotnet build
         working-directory: Godot Project/
-      
+
       - name: Godot Export
         run: |
           mkdir export/
@@ -66,12 +67,12 @@ jobs:
           name: "godot-${{ matrix.export-template }}-release"
           path: Godot Project/export/
 
-  match-maker-server: 
+  match-maker-server:
     strategy:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest]
-    
+
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -85,18 +86,18 @@ jobs:
           rustup --version
           cargo +${{ env.RUST_CHANNEL }} --version
           rustc +${{ env.RUST_CHANNEL }} --version
-        
+
       - name: Release Build
         run: cargo build --release
         working-directory: Match Maker Server/
-  
+
       - name: Upload build artifacts (Linux)
         uses: actions/upload-artifact@v4
         with:
           name: match-maker-server-linux
           path: Match Maker Server/target/release/match_maker_server
         if: matrix.os == 'ubuntu-latest'
-  
+
       - name: Upload build artifacts (Windows)
         uses: actions/upload-artifact@v4
         with:
@@ -105,7 +106,8 @@ jobs:
         if: matrix.os == 'windows-latest'
 
   archive-plugin-webrtc:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container: ubuntu:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -118,7 +120,8 @@ jobs:
           path: Godot Project/addons/webrtc_sipsorcery/
 
   archive-plugin-match-maker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container: ubuntu:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -131,7 +134,8 @@ jobs:
           path: Godot Project/addons/match_maker/
 
   archive-demo-project:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container: ubuntu:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -144,12 +148,13 @@ jobs:
           path: Godot Project/
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container: ubuntu:latest
 
     permissions:
       contents: write
 
-    needs: 
+    needs:
       - export-godot-release
       - match-maker-server
       - archive-plugin-webrtc

@@ -7,7 +7,7 @@ on:
 jobs:
   container-test-job:
     runs-on: self-hosted
-    container: hello-world
+    container: ubuntu:latest
     steps:
       - run: uname -a
       - run: cat /proc/1/cgroup

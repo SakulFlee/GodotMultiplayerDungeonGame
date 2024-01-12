@@ -1,0 +1,34 @@
+[gd_scene load_steps=7 format=3 uid="uid://da6bmqp6hwakk"]
+
+[ext_resource type="Script" path="res://Player/Player.cs" id="1_tbhck"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cwoq2"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_k37x5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2q161"]
+albedo_color = Color(0, 0.647059, 0.894118, 1)
+
+[sub_resource type="PrismMesh" id="PrismMesh_t4n3j"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_akxbf"]
+albedo_color = Color(0.952941, 0, 0.678431, 1)
+
+[node name="Player" type="Node3D"]
+script = ExtResource("1_tbhck")
+
+[node name="CharacterBody3D" type="CharacterBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_cwoq2")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("CapsuleMesh_k37x5")
+surface_material_override/0 = SubResource("StandardMaterial3D_2q161")
+
+[node name="Nose" type="MeshInstance3D" parent="."]
+transform = Transform3D(-5.24537e-09, 0.16, 0, 5.24537e-09, 3.0571e-16, -0.2, -0.12, -6.99382e-09, -8.74228e-09, 0.5, 1.5, 0)
+mesh = SubResource("PrismMesh_t4n3j")
+surface_material_override/0 = SubResource("StandardMaterial3D_akxbf")

@@ -1,6 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://6g75efppoade"]
+[gd_scene load_steps=5 format=3 uid="uid://cfc1dhtsii7hg"]
 
-[ext_resource type="Script" path="res://MainGame/MainGame.cs" id="1_r6cp2"]
+[ext_resource type="Script" path="res://Scripts/Scene/MainGame.cs" id="1_r6cp2"]
 [ext_resource type="Script" path="res://addons/match_maker/MatchMaker.cs" id="3_hps7x"]
 [ext_resource type="PackedScene" uid="uid://dfrhaa6ime1jf" path="res://DebugPanel/DebugPanel.tscn" id="3_vl38l"]
 [ext_resource type="PackedScene" uid="uid://cenjhm83f2riu" path="res://ConnectionPanel/ConnectionPanel.tscn" id="4_cvayv"]
@@ -9,6 +9,7 @@
 script = ExtResource("1_r6cp2")
 
 [node name="MatchMaker" type="Node" parent="."]
+unique_name_in_owner = true
 script = ExtResource("3_hps7x")
 MatchMakerConnectionString = "ws://calamity-chicken.sakul-flee.de:33333"
 ICEServers = [{

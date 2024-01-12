@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c7p4ubwm0oykt"]
 
-[ext_resource type="Script" path="res://Main.cs" id="2_i14hs"]
+[ext_resource type="Script" path="res://Scripts/Scene/Main.cs" id="2_i14hs"]
 
 [node name="Main" type="Panel"]
 anchors_preset = 15

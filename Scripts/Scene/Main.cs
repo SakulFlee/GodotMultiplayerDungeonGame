@@ -9,7 +9,8 @@ public partial class Main : Panel
 		timer = GetNode<Timer>("%Timer");
 		timer.Timeout += () =>
 		{
-			switchScene("MainGame/MainGame.tscn");
+			// switchScene("MainGame/MainGame.tscn");
+			switchScene("Generator/TestScene.tscn");
 		};
 	}
 

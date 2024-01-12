@@ -1,0 +1,33 @@
+digraph G {
+node [shape=circle];
+edge [tooltip="Edge tooltip"];
+0 [label="Entrance Normal"];
+1 [label="Boss End"];
+2 [label="Main #0"];
+3 [label="Main #1"];
+4 [label="Main #2"];
+5 [label="Main #3"];
+6 [label="Sub #0"];
+7 [label="Sub #1"];
+8 [label="Sub #2"];
+9 [label="Sub #3"];
+10 [label="Sub #4"];
+11 [label="Sub #5"];
+12 [label="Sub #6"];
+13 [label="Sub #7"];
+14 [label="Sub #8"];
+15 [label="Sub #9"];
+16 [label="Sub #10"];
+17 [label="Sub #11"];
+18 [label="Sub #12"];
+19 [label="Sub #13"];
+0 -> 2;
+2 -> 3;
+3 -> 4;
+4 -> 5;
+5 -> 1;
+6 -> 3;
+7 -> 2;
+10 -> 4;
+16 -> 4;
+}

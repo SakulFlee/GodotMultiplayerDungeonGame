@@ -33,7 +33,7 @@ public partial class Dungeon : Node3D
         for (var i = 0; i < 10; i++)
         {
             var d = new DungeonRoomGenerator(40, 40);
-            d.DoWork(10);
+            d.DoWork(10, roomType: DungeonRoomType.Circular);
             d.Print();
 
             var startX = (i > 4 ? i - 5 : i) * 40;
@@ -52,11 +52,6 @@ public partial class Dungeon : Node3D
                     {
                         gridMap.SetCellItem(new Vector3I(startX + x, 0, startY + y), dirtId);
                         gridMap.SetCellItem(new Vector3I(startX + x, 1, startY + y), stoneId);
-                    }
-                    else
-                    {
-                        if (cell != ' ')
-                            GD.Print($"Found other ID: {cell} at {x}:{y}");
                     }
                 }
         }

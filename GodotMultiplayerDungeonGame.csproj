@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <RootNamespace>WebRTCMatchMakerGodotProject</RootNamespace>
+    <RootNamespace>GodotMultiplayerDungeonGame</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FlashCap" Version="1.9.0" />

@@ -18,9 +18,9 @@ public class DungeonRoomGenerator
         InitializeGrid(maxWidth, maxHeight);
     }
 
-    public void DoWork(int minSize)
+    public void DoWork(int minSize, bool exactSize = false, DungeonRoomType roomType = DungeonRoomType.RandomPlaceSquare)
     {
-        Generate(minSize);
+        Generate(minSize, exactSize, roomType);
         Walls();
         Reduce();
     }
@@ -38,13 +38,26 @@ public class DungeonRoomGenerator
         InitializeGrid(GetWidth(), GetHeight());
     }
 
-    public void Generate(int minSize)
+    public void Generate(int minSize, bool exactSize = false, DungeonRoomType roomType = DungeonRoomType.RandomPlaceSquare)
+    {
+        switch (roomType)
+        {
+            case DungeonRoomType.RandomPlaceSquare:
+                GenerateRandomPlaceSquare(minSize, exactSize);
+                break;
+            case DungeonRoomType.Circular:
+                GenerateCircular(minSize, exactSize);
+                break;
+        }
+    }
+
+    private void GenerateRandomPlaceSquare(int minSize, bool exactSize)
     {
         var iEnd = R.Next(5, 15);
         for (var i = 0; i < iEnd; i++)
         {
-            var originX = R.Next(0, GetWidth());
-            var originY = R.Next(0, GetHeight());
+            var originX = exactSize ? GetWidth() : R.Next(0, GetWidth());
+            var originY = exactSize ? GetHeight() : R.Next(0, GetHeight());
 
             if (originX + minSize >= GetWidth() || originY + minSize >= GetHeight())
                 continue; // Skip
@@ -52,8 +65,8 @@ public class DungeonRoomGenerator
             var sizeLeftX = GetWidth() - originX - 1;
             var sizeLeftY = GetHeight() - originY - 1;
 
-            var endX = R.Next(originX + minSize, originX + sizeLeftX);
-            var endY = R.Next(originY + minSize, originY + sizeLeftY);
+            var endX = exactSize ? sizeLeftX : R.Next(originX + minSize, originX + sizeLeftX);
+            var endY = exactSize ? sizeLeftY : R.Next(originY + minSize, originY + sizeLeftY);
 
             // Last one must be additive
             var additive = i == iEnd - 1 || R.NextDouble() <= 0.75;
@@ -73,7 +86,38 @@ public class DungeonRoomGenerator
         {
             // Something went wrong, regenerate the room!
             ReinitializeGrid();
-            Generate(minSize);
+            Generate(minSize, exactSize, DungeonRoomType.RandomPlaceSquare);
+        }
+    }
+
+    private void GenerateCircular(int minSize, bool exactSize)
+    {
+        var smallestDimension = GetWidth() > GetHeight()
+                ? GetHeight()
+                : GetWidth();
+        var offset = (exactSize
+            ? smallestDimension
+            : R.Next(minSize, smallestDimension)) / 2;
+        var radius = offset / 2;
+
+        for (var x = 0; x <= GetWidth(); x++)
+            for (var y = 0; y <= GetHeight(); y++)
+            {
+                if (x * x + y * y < radius * radius)
+                    Grid[offset + x, offset + y] = FLOOR;
+            }
+
+        // Sanity check
+        var filledTileCount = 0;
+        for (var x = 0; x < GetWidth(); x++)
+            for (var y = 0; y < GetHeight(); y++)
+                if (GetCell(x, y) == FLOOR) filledTileCount++;
+
+        if (filledTileCount < minSize * minSize)
+        {
+            // Something went wrong, regenerate the room!
+            ReinitializeGrid();
+            Generate(minSize, exactSize, DungeonRoomType.Circular);
         }
     }
 

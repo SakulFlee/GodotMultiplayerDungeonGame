@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
-public partial class Dungeon : Node3D
+public partial class GameDungeon : Node3D
 {
 	#region Exports
 	[Export]
@@ -81,21 +81,8 @@ public partial class Dungeon : Node3D
 		RoomsToGodot();
 	}
 
-	private Dictionary<string, int> MakeItemTranslationMap()
-	{
-		var itemNameToId = new Dictionary<string, int>();
-		foreach (var item in gridMap.MeshLibrary.GetItemList())
-		{
-			var name = gridMap.MeshLibrary.GetItemName(item);
-			itemNameToId.Add(name, item);
-		}
-		return itemNameToId;
-	}
-
 	private void RoomsToGodot()
 	{
-		var translationMap = MakeItemTranslationMap();
-
 		var index = 0;
 		foreach (var room in placedDungeonRooms)
 		{
@@ -118,13 +105,13 @@ public partial class Dungeon : Node3D
 						case DungeonRoomGenerator.FLOOR:
 							gridMap.SetCellItem(
 								new Vector3I(gridX, 1, gridY),
-								translationMap["Dirt"]
+								GeneratorLookup["Dirt"].As<int>()
 							);
 							break;
 						case DungeonRoomGenerator.WALL:
 							gridMap.SetCellItem(
 								new Vector3I(gridX, 1, gridY),
-								translationMap["Stone"]
+								GeneratorLookup["Stone"].As<int>()
 							);
 							break;
 					}

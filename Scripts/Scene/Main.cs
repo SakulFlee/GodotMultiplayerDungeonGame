@@ -9,14 +9,13 @@ public partial class Main : Panel
 		timer = GetNode<Timer>("%Timer");
 		timer.Timeout += () =>
 		{
-			// switchScene("MainGame/MainGame.tscn");
-			switchScene("Generator/TestScene.tscn");
+			switchScene("GameDungeon");
 		};
 	}
 
-	private void switchScene(string path)
+	private void switchScene(string name)
 	{
-		var err = GetTree().ChangeSceneToFile(path);
+		var err = GetTree().ChangeSceneToFile($"res:///Scenes/{name}.tscn");
 		if (err != Error.Ok)
 		{
 			GD.PrintErr($"Failed to switch scene ({err})");

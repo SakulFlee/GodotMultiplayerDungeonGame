@@ -91,8 +91,6 @@ public partial class GameDungeon : Node3D
 			var endX = startX + room.Width;
 			var endY = startY + room.Height;
 
-			GD.Print($"Placing room #{index} from {startX}-{startY} to {endX}-{endY}!");
-
 			for (var indexX = 0; indexX < room.Width; indexX++)
 				for (var indexY = 0; indexY < room.Height; indexY++)
 				{
@@ -163,8 +161,6 @@ public partial class GameDungeon : Node3D
 				var x = (int)(row * maxWidth + SafetyUnitsAroundRoom);
 				var y = (int)(column * maxHeight + SafetyUnitsAroundRoom);
 				var location = new Vector2I(x, y);
-
-				GD.Print($"Placing room #{index} at {x}-{y}");
 
 				var generatedRoom = rooms[index++];
 				var placedRoom = new PlacedDungeonRoom(generatedRoom, location);

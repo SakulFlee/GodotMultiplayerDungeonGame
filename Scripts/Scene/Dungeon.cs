@@ -1,59 +1,215 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 public partial class Dungeon : Node3D
 {
-    private GridMap gridMap;
+	#region Exports
+	[Export]
+	[ExportGroup("General")]
+	public uint SafetyUnitsAroundRoom = 50;
 
-    public override void _EnterTree()
-    {
-        gridMap = GetNode<GridMap>("%GridMap");
-    }
+	[Export]
+	[ExportGroup("Boss Room")]
+	public bool GenerateBossRoom = true;
 
-    public override void _Ready()
-    {
-        gridMap.Clear();
+	[Export]
+	[ExportGroup("Boss Room")]
+	public Vector2I BossRoomSize = new Vector2I(100, 100);
 
-        var dirtId = -1;
-        var stoneId = -1;
+	[Export]
+	[ExportGroup("Boss Room")]
+	public bool BossRoomExactSize = true;
 
-        foreach (var itemId in gridMap.MeshLibrary.GetItemList())
-            switch (gridMap.MeshLibrary.GetItemName(itemId))
-            {
-                case "Dirt":
-                    dirtId = itemId;
-                    break;
-                case "Stone":
-                    stoneId = itemId;
-                    break;
-            }
+	[Export]
+	[ExportGroup("Boss Room")]
+	public double BossRoomMinFilledPercent = 50.0;
 
-        if (dirtId == -1) GD.PrintErr("Didn't find Dirt item id!");
-        if (stoneId == -1) GD.PrintErr("Didn't find Stone item id!");
+	[Export]
+	[ExportGroup("Spawn Room")]
+	public bool GenerateSpawnRoom = true;
 
-        for (var i = 0; i < 10; i++)
-        {
-            var d = new DungeonRoomGenerator(40, 40);
-            d.DoWork(10, roomType: DungeonRoomType.Circular);
-            d.Print();
+	[Export]
+	[ExportGroup("Spawn Room")]
+	public Vector2I SpawnRoomSize = new Vector2I(25, 25);
 
-            var startX = (i > 4 ? i - 5 : i) * 40;
-            var startY = (i % 3) * 40;
+	[Export]
+	[ExportGroup("Spawn Room")]
+	public bool SpawnRoomExactSize = true;
 
-            for (var x = 0; x <= d.GetWidth(); x++)
-                for (var y = 0; y <= d.GetHeight(); y++)
-                {
-                    var cell = d.GetCell(x, y);
+	[Export]
+	[ExportGroup("Spawn Room")]
+	public double SpawnRoomMinFilledPercent = 25.0;
 
-                    if (cell == DungeonRoomGenerator.FLOOR)
-                    {
-                        gridMap.SetCellItem(new Vector3I(startX + x, 0, startY + y), dirtId);
-                    }
-                    else if (cell == DungeonRoomGenerator.WALL)
-                    {
-                        gridMap.SetCellItem(new Vector3I(startX + x, 0, startY + y), dirtId);
-                        gridMap.SetCellItem(new Vector3I(startX + x, 1, startY + y), stoneId);
-                    }
-                }
-        }
-    }
+	[Export]
+	[ExportGroup("Rooms")]
+	public uint Rooms = 15;
+
+	[Export]
+	[ExportGroup("Rooms")]
+	public Vector2I RoomSize = new Vector2I(40, 40);
+
+	[Export]
+	[ExportGroup("Rooms")]
+	public double RoomMinFilledPercent = 25.0;
+
+	[Export]
+	[ExportGroup("Generator")]
+	public Godot.Collections.Dictionary GeneratorLookup = new()
+	{
+		{ "Dirt", 0 },
+		{ "Stone", 1 },
+	};
+	#endregion
+
+	private GridMap gridMap;
+
+	private List<PlacedDungeonRoom> placedDungeonRooms = new();
+
+	public override void _EnterTree()
+	{
+		gridMap = GetNode<GridMap>("%GridMap");
+	}
+
+	public override void _Ready()
+	{
+		gridMap.Clear();
+
+		var rooms = GenerateRooms();
+		ProcessGeneratedRooms(rooms);
+		RoomsToGodot();
+	}
+
+	private Dictionary<string, int> MakeItemTranslationMap()
+	{
+		var itemNameToId = new Dictionary<string, int>();
+		foreach (var item in gridMap.MeshLibrary.GetItemList())
+		{
+			var name = gridMap.MeshLibrary.GetItemName(item);
+			itemNameToId.Add(name, item);
+		}
+		return itemNameToId;
+	}
+
+	private void RoomsToGodot()
+	{
+		var translationMap = MakeItemTranslationMap();
+
+		var index = 0;
+		foreach (var room in placedDungeonRooms)
+		{
+			var startX = room.Location.X;
+			var startY = room.Location.Y;
+			var endX = startX + room.Width;
+			var endY = startY + room.Height;
+
+			GD.Print($"Placing room #{index} from {startX}-{startY} to {endX}-{endY}!");
+
+			for (var indexX = 0; indexX < room.Width; indexX++)
+				for (var indexY = 0; indexY < room.Height; indexY++)
+				{
+					var gridX = startX + indexX;
+					var gridY = startY + indexY;
+
+					var cell = room.Grid[indexX, indexY];
+					switch (cell)
+					{
+						case DungeonRoomGenerator.FLOOR:
+							gridMap.SetCellItem(
+								new Vector3I(gridX, 1, gridY),
+								translationMap["Dirt"]
+							);
+							break;
+						case DungeonRoomGenerator.WALL:
+							gridMap.SetCellItem(
+								new Vector3I(gridX, 1, gridY),
+								translationMap["Stone"]
+							);
+							break;
+					}
+				}
+
+			index++;
+		}
+	}
+
+	private void ProcessGeneratedRooms(List<DungeonRoomGenerator> rooms)
+	{
+		placedDungeonRooms.Clear();
+
+		var maxWidth = rooms.Max(room => room.GetWidth() + SafetyUnitsAroundRoom);
+		var maxHeight = rooms.Max(room => room.GetHeight() + SafetyUnitsAroundRoom);
+
+		// We need to find NxM grid to place all rooms on.
+		// The issue is, that only rarely all rooms fit on a
+		// uniform grid. Thus, we can adjust one axis to be longer
+		// if needed to fit all rooms.
+		// By taking the square root of the room count, we know
+		// how many rows and columns are needed to fit all rooms.
+		// If we then ceil (round up) one of them and floor
+		// (round down) the other, we can fit all rooms on the grid
+		// in a almost square shape.
+		// ---
+		// Example: 30 rooms to place 
+		// sqrt(30) = 5.4
+		// Rows = ceil(5.4) == 6
+		// Columns = floor(5.4) == 5
+		// NxM: 6x5 grid to place 30 rooms
+		// 1 2 3 4 5
+		// 2 x x x x
+		// 3 x x x x
+		// 4 x x x x
+		// 5 x x x x
+		// 6 x x x x
+		var roomCount = rooms.Count();
+		var roomCountSqrt = Math.Sqrt(roomCount);
+		var rows = Math.Ceiling(roomCountSqrt);
+		var columns = Math.Floor(roomCountSqrt);
+
+		var index = 0;
+		for (var row = 0; row < rows; row++)
+			for (var column = 0; column < columns; column++)
+			{
+				if (index >= rooms.Count) break;
+
+				var x = (int)(row * maxWidth + SafetyUnitsAroundRoom);
+				var y = (int)(column * maxHeight + SafetyUnitsAroundRoom);
+				var location = new Vector2I(x, y);
+
+				GD.Print($"Placing room #{index} at {x}-{y}");
+
+				var generatedRoom = rooms[index++];
+				var placedRoom = new PlacedDungeonRoom(generatedRoom, location);
+				placedDungeonRooms.Add(placedRoom);
+			}
+	}
+
+	private List<DungeonRoomGenerator> GenerateRooms()
+	{
+		var rooms = new List<DungeonRoomGenerator>();
+
+		if (GenerateBossRoom)
+		{
+			var bossRoom = new DungeonRoomGenerator(BossRoomSize.X, BossRoomSize.Y);
+			bossRoom.DoWork(BossRoomMinFilledPercent, BossRoomExactSize, DungeonRoomType.Circular);
+			rooms.Add(bossRoom);
+		}
+
+		if (GenerateSpawnRoom)
+		{
+			var spawnRoom = new DungeonRoomGenerator(SpawnRoomSize.X, SpawnRoomSize.Y);
+			spawnRoom.DoWork(SpawnRoomMinFilledPercent, SpawnRoomExactSize, DungeonRoomType.RandomPlaceSquare); // TODO: Square?
+			rooms.Add(spawnRoom);
+		}
+
+		for (var i = 0; i < Rooms; i++)
+		{
+			var room = new DungeonRoomGenerator(RoomSize.X, RoomSize.Y);
+			room.DoWork(RoomMinFilledPercent, false, DungeonRoomType.RandomPlaceSquare);
+			rooms.Add(room);
+		}
+
+		return rooms;
+	}
 }

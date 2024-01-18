@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using Org.BouncyCastle.Math.EC;
 
 public class DungeonRoomGenerator
 {
@@ -18,9 +19,20 @@ public class DungeonRoomGenerator
         InitializeGrid(maxWidth, maxHeight);
     }
 
-    public void DoWork(int minSize, bool exactSize = false, DungeonRoomType roomType = DungeonRoomType.RandomPlaceSquare)
+    public void DoWork(double minFilledTilesPercentage, bool exactSize = false, DungeonRoomType roomType = DungeonRoomType.RandomPlaceSquare)
     {
-        Generate(minSize, exactSize, roomType);
+        var first = true;
+        var attempts = 0;
+        do
+        {
+            if (first)
+            {
+                first = false;
+                ReinitializeGrid();
+            }
+
+            Generate(exactSize, roomType);
+        } while (!SanityCheck(minFilledTilesPercentage) && attempts++ <= 100);
         Walls();
         Reduce();
     }
@@ -38,35 +50,50 @@ public class DungeonRoomGenerator
         InitializeGrid(GetWidth(), GetHeight());
     }
 
-    public void Generate(int minSize, bool exactSize = false, DungeonRoomType roomType = DungeonRoomType.RandomPlaceSquare)
+    public void Generate(bool exactSize = false, DungeonRoomType roomType = DungeonRoomType.RandomPlaceSquare)
     {
         switch (roomType)
         {
             case DungeonRoomType.RandomPlaceSquare:
-                GenerateRandomPlaceSquare(minSize, exactSize);
+                GenerateRandomPlaceSquare(exactSize);
                 break;
             case DungeonRoomType.Circular:
-                GenerateCircular(minSize, exactSize);
+                GenerateCircular(exactSize);
                 break;
         }
     }
 
-    private void GenerateRandomPlaceSquare(int minSize, bool exactSize)
+    public bool SanityCheck(double minPercentage)
+    {
+        var totalTiles = GetWidth() * GetHeight();
+        var percentageBase = 100 / totalTiles;
+
+        // Sanity check
+        var filledTileCount = 0;
+        for (var x = 0; x < GetWidth(); x++)
+            for (var y = 0; y < GetHeight(); y++)
+                if (GetCell(x, y) == FLOOR) filledTileCount++;
+
+        var filledPercentage = percentageBase * filledTileCount;
+        return filledPercentage >= minPercentage;
+    }
+
+    private void GenerateRandomPlaceSquare(bool exactSize)
     {
         var iEnd = R.Next(5, 15);
         for (var i = 0; i < iEnd; i++)
         {
-            var originX = exactSize ? GetWidth() : R.Next(0, GetWidth());
-            var originY = exactSize ? GetHeight() : R.Next(0, GetHeight());
-
-            if (originX + minSize >= GetWidth() || originY + minSize >= GetHeight())
-                continue; // Skip
+            var originX = exactSize ? 0 : R.Next(0, GetWidth());
+            var originY = exactSize ? 0 : R.Next(0, GetHeight());
 
             var sizeLeftX = GetWidth() - originX - 1;
             var sizeLeftY = GetHeight() - originY - 1;
 
-            var endX = exactSize ? sizeLeftX : R.Next(originX + minSize, originX + sizeLeftX);
-            var endY = exactSize ? sizeLeftY : R.Next(originY + minSize, originY + sizeLeftY);
+            if (sizeLeftX <= 0 || sizeLeftY <= 0)
+                continue; // Skip
+
+            var endX = exactSize ? sizeLeftX : R.Next(originX + sizeLeftX / 4, originX + sizeLeftX);
+            var endY = exactSize ? sizeLeftY : R.Next(originY + sizeLeftY / 4, originY + sizeLeftY);
 
             // Last one must be additive
             var additive = i == iEnd - 1 || R.NextDouble() <= 0.75;
@@ -75,36 +102,27 @@ public class DungeonRoomGenerator
                 for (var y = originY; y <= endY; y++)
                     Grid[x, y] = additive ? FLOOR : EMPTY;
         }
-
-        // Sanity check
-        var filledTileCount = 0;
-        for (var x = 0; x < GetWidth(); x++)
-            for (var y = 0; y < GetHeight(); y++)
-                if (GetCell(x, y) == FLOOR) filledTileCount++;
-
-        if (filledTileCount < minSize * minSize)
-        {
-            // Something went wrong, regenerate the room!
-            ReinitializeGrid();
-            Generate(minSize, exactSize, DungeonRoomType.RandomPlaceSquare);
-        }
     }
 
-    private void GenerateCircular(int minSize, bool exactSize)
+    private void GenerateCircular(bool exactSize)
     {
         var smallestDimension = GetWidth() > GetHeight()
                 ? GetHeight()
                 : GetWidth();
         var offset = (exactSize
             ? smallestDimension
-            : R.Next(minSize, smallestDimension)) / 2;
-        var radius = offset / 2;
+            : R.Next(smallestDimension / 4, smallestDimension)) / 2;
+        var radiusSquared = offset * offset;
 
         for (var x = 0; x <= GetWidth(); x++)
             for (var y = 0; y <= GetHeight(); y++)
             {
-                if (x * x + y * y < radius * radius)
-                    Grid[offset + x, offset + y] = FLOOR;
+                var actualX = x - offset;
+                var actualY = y - offset;
+
+                var vector = actualX * actualX + actualY * actualY;
+                if (vector < radiusSquared)
+                    Grid[x, y] = FLOOR;
             }
 
         // Sanity check
@@ -112,13 +130,6 @@ public class DungeonRoomGenerator
         for (var x = 0; x < GetWidth(); x++)
             for (var y = 0; y < GetHeight(); y++)
                 if (GetCell(x, y) == FLOOR) filledTileCount++;
-
-        if (filledTileCount < minSize * minSize)
-        {
-            // Something went wrong, regenerate the room!
-            ReinitializeGrid();
-            Generate(minSize, exactSize, DungeonRoomType.Circular);
-        }
     }
 
     public void Walls()
@@ -182,6 +193,7 @@ public class DungeonRoomGenerator
         var sizeX = biggestFilledTileX - smallestFilledTileX + 1;
         var sizeY = biggestFilledTileY - smallestFilledTileY + 1;
 
+        GD.Print($"sizeX: {sizeX} - sizeY: {sizeY}");
         var result = new char[sizeX, sizeY];
 
         for (var x = 0; x < sizeX; x++)
@@ -229,5 +241,20 @@ public class DungeonRoomGenerator
     public bool IsInBounds(int x, int y)
     {
         return x >= 0 && y >= 0 && x <= GetWidth() && y <= GetHeight();
+    }
+
+    public bool IsGenerated()
+    {
+        var floorTiles = 0;
+        var wallTiles = 0;
+
+        for (var x = 0; x <= GetWidth(); x++)
+            for (var y = 0; y <= GetHeight(); y++)
+            {
+                if (Grid[x, y] == FLOOR) floorTiles++;
+                else if (Grid[x, y] == WALL) wallTiles++;
+            }
+
+        return floorTiles > 0 && wallTiles > 0 && floorTiles > wallTiles;
     }
 }

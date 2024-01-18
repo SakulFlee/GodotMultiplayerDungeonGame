@@ -10,6 +10,7 @@ config_version=5
 
 [application]
 
+run/main_scene="res://Scenes/Main.tscn"
 config/features=PackedStringArray("4.2", "C#")
 
 [dotnet]

@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://da6bmqp6hwakk"]
 
-[ext_resource type="Script" path="res://Player/Player.cs" id="1_tbhck"]
+[ext_resource type="Script" path="res://Scripts/Player.cs" id="1_d77f7"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cwoq2"]
 
@@ -14,21 +14,32 @@ albedo_color = Color(0, 0.647059, 0.894118, 1)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_akxbf"]
 albedo_color = Color(0.952941, 0, 0.678431, 1)
 
-[node name="Player" type="Node3D"]
-script = ExtResource("1_tbhck")
+[node name="CharacterBody3D" type="CharacterBody3D"]
+unique_name_in_owner = true
+script = ExtResource("1_d77f7")
 
-[node name="CharacterBody3D" type="CharacterBody3D" parent="."]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CharacterBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_cwoq2")
 
-[node name="Body" type="MeshInstance3D" parent="."]
+[node name="Player" type="Node3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, 0)
+
+[node name="Body" type="MeshInstance3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_k37x5")
 surface_material_override/0 = SubResource("StandardMaterial3D_2q161")
 
-[node name="Nose" type="MeshInstance3D" parent="."]
+[node name="Nose" type="MeshInstance3D" parent="Player"]
 transform = Transform3D(-5.24537e-09, 0.16, 0, 5.24537e-09, 3.0571e-16, -0.2, -0.12, -6.99382e-09, -8.74228e-09, 0.5, 1.5, 0)
 mesh = SubResource("PrismMesh_t4n3j")
 surface_material_override/0 = SubResource("StandardMaterial3D_akxbf")
+
+[node name="Camera" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 0, 2, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="Camera"]
+spring_length = 15.0
+
+[node name="Camera3D" type="Camera3D" parent="Camera/SpringArm3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 15)

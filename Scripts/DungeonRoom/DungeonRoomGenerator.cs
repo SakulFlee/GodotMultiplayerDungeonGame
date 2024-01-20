@@ -14,8 +14,11 @@ public class DungeonRoomGenerator
 
     public char[,] Grid { get; private set; }
 
-    public DungeonRoomGenerator(int maxWidth, int maxHeight)
+    public string Flag { get; private set; }
+
+    public DungeonRoomGenerator(int maxWidth, int maxHeight, string flag = "")
     {
+        Flag = flag;
         InitializeGrid(maxWidth, maxHeight);
     }
 

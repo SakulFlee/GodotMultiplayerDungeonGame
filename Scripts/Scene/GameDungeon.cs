@@ -67,9 +67,12 @@ public partial class GameDungeon : Node3D
 
 	private List<PlacedDungeonRoom> placedDungeonRooms = new();
 
+	private Player player;
+
 	public override void _EnterTree()
 	{
 		gridMap = GetNode<GridMap>("%GridMap");
+		player = GetNode<Player>("%Player");
 	}
 
 	public override void _Ready()
@@ -79,6 +82,24 @@ public partial class GameDungeon : Node3D
 		var rooms = GenerateRooms();
 		ProcessGeneratedRooms(rooms);
 		RoomsToGodot();
+		PlacePlayer();
+	}
+
+	private void PlacePlayer()
+	{
+		// Find spawn
+		var spawnRoom = placedDungeonRooms.Find(x => x.Flag == "spawn");
+
+		// TODO: Generate doors/entrances and use those instead
+		// For now: Place in the center of the room and pray it's a floor? xD
+
+		var centerX = spawnRoom.Location.X + spawnRoom.Width / 2;
+		var centerY = spawnRoom.Location.Y + spawnRoom.Height / 2;
+
+		var gridPosition = gridMap.MapToLocal(new Vector3I(centerX, 2, centerY));
+
+		GD.Print($"Placing player at {centerX}-{centerY}; Grid: {gridPosition} spawn room: {spawnRoom.Location}");
+		player.Position = gridPosition;
 	}
 
 	private void RoomsToGodot()
@@ -88,8 +109,6 @@ public partial class GameDungeon : Node3D
 		{
 			var startX = room.Location.X;
 			var startY = room.Location.Y;
-			var endX = startX + room.Width;
-			var endY = startY + room.Height;
 
 			for (var indexX = 0; indexX < room.Width; indexX++)
 				for (var indexY = 0; indexY < room.Height; indexY++)
@@ -174,14 +193,14 @@ public partial class GameDungeon : Node3D
 
 		if (GenerateBossRoom)
 		{
-			var bossRoom = new DungeonRoomGenerator(BossRoomSize.X, BossRoomSize.Y);
+			var bossRoom = new DungeonRoomGenerator(BossRoomSize.X, BossRoomSize.Y, "boss");
 			bossRoom.DoWork(BossRoomMinFilledPercent, BossRoomExactSize, DungeonRoomType.Circular);
 			rooms.Add(bossRoom);
 		}
 
 		if (GenerateSpawnRoom)
 		{
-			var spawnRoom = new DungeonRoomGenerator(SpawnRoomSize.X, SpawnRoomSize.Y);
+			var spawnRoom = new DungeonRoomGenerator(SpawnRoomSize.X, SpawnRoomSize.Y, "spawn");
 			spawnRoom.DoWork(SpawnRoomMinFilledPercent, SpawnRoomExactSize, DungeonRoomType.RandomPlaceSquare); // TODO: Square?
 			rooms.Add(spawnRoom);
 		}

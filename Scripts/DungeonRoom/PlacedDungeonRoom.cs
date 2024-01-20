@@ -7,6 +7,7 @@ public class PlacedDungeonRoom
     public char[,] Grid { get; private set; }
     public int Width { get; private set; }
     public int Height { get; private set; }
+    public string Flag { get; private set; }
 
     public PlacedDungeonRoom(DungeonRoomGenerator generator, Vector2I location)
     {
@@ -16,6 +17,7 @@ public class PlacedDungeonRoom
         Grid = generator.Grid;
         Width = generator.GetWidth();
         Height = generator.GetHeight();
+        Flag = generator.Flag;
     }
 
     public void Print()

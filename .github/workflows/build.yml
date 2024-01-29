@@ -24,6 +24,12 @@ jobs:
     container: ubuntu:lunar-20231128
 
     steps:
+      - name: Pre-Cleanup
+        run: |
+          find . -delete || true
+          find /github -delete || true
+        if: always()
+
       - uses: actions/checkout@v4
         name: Checkout
 
@@ -44,12 +50,6 @@ jobs:
         with:
           dotnet-version: ${{ env.CSharpVersion }}
 
-      - name: Remove godot syslink if it exists
-        run: |
-          rm -rf /github/home/bin/godot || true
-          rm -rf /github/home/bin/GodotSharp || true
-          rm -rf /github/home/godot || true
-
       - uses: chickensoft-games/setup-godot@v1
         name: Setup Godot
         with:
@@ -57,9 +57,17 @@ jobs:
           version: ${{ matrix.godot-version }}
           # Use .NET-enabled version of Godot (the default is also true).
           use-dotnet: true
+          # Use release version of GodotSharp
+          godot-sharp-release: true
 
       - name: Build Project
         run: |
           dotnet restore
           godot --headless --build-solutions --quit || exit 0
           dotnet build
+
+      - name: Post-Cleanup
+        run: |
+          find . -delete || true
+          find /github -delete || true
+        if: always()

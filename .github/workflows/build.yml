@@ -25,7 +25,10 @@ jobs:
 
     steps:
       # Cleanup required for self-hosted runner
-      - uses: colpal/actions-clean@v1
+      - run: |
+          find . ! -type d -delete
+          find . -depth -path './*' -type d -exec rmdir {} +
+          find . /github/home/downloads ! -type d -delete
 
       - uses: actions/checkout@v4
         name: Checkout

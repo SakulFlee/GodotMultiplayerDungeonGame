@@ -24,6 +24,12 @@ jobs:
     container: ubuntu:lunar-20231128
 
     steps:
+      - name: Pre-Cleanup
+        run: |
+          find . -delete || true
+          find /github -delete || true
+        if: always()
+
       - uses: actions/checkout@v4
         name: Checkout
 
@@ -43,7 +49,7 @@ jobs:
         name: Setup .NET SDK
         with:
           dotnet-version: ${{ env.CSharpVersion }}
-          
+
       - uses: chickensoft-games/setup-godot@v1
         name: Setup Godot
         with:
@@ -59,3 +65,9 @@ jobs:
           dotnet restore
           godot --headless --build-solutions --quit || exit 0
           dotnet build
+
+      - name: Post-Cleanup
+        run: |
+          find . -delete || true
+          find /github -delete || true
+        if: always()

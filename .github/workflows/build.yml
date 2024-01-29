@@ -24,6 +24,9 @@ jobs:
     container: ubuntu:lunar-20231128
 
     steps:
+      # Cleanup required for self-hosted runner
+      - uses: colpal/actions-clean@v1
+
       - uses: actions/checkout@v4
         name: Checkout
 
@@ -43,7 +46,7 @@ jobs:
         name: Setup .NET SDK
         with:
           dotnet-version: ${{ env.CSharpVersion }}
-          
+
       - uses: chickensoft-games/setup-godot@v1
         name: Setup Godot
         with:

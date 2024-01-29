@@ -1,0 +1,16 @@
+'Task: Code':
+- changed-files:
+  - any-glob-to-any-file: 'Scripts/**'
+    
+'Task: Modelling':
+- changed-files:
+  - any-glob-to-any-file: 'Models/**'
+
+'Scene: Dungeon':
+- changed-files:
+  - any-glob-to-any-file: 'Scripts/Dungeon/**'
+  - any: 'Scene/Dungeon.cs'
+    
+'Scene: Main Menu':
+- changed-files:
+  - any: 'Scene/MainMenu.cs'

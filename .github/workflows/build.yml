@@ -28,7 +28,9 @@ jobs:
       - run: |
           find . ! -type d -delete
           find . -depth -path './*' -type d -exec rmdir {} +
-          find . /github/home/downloads ! -type d -delete
+          ls -al -R /home
+          ls -al -R /github
+          # find . /github/home/downloads ! -type d -delete
 
       - uses: actions/checkout@v4
         name: Checkout

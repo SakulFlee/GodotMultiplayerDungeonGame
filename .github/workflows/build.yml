@@ -43,14 +43,7 @@ jobs:
         name: Setup .NET SDK
         with:
           dotnet-version: ${{ env.CSharpVersion }}
-
-      - name: Remove godot syslink if it exists
-        run: |
-          rm -rf /github/home/bin/godot || true
-          rm -rf /github/home/bin/GodotSharp || true
-          rm -rf /github/home/godot || true
-          rm -rf /github/home/downloads/Godot_${{ matrix.godot-version }}-stable_mono_linux_x86_64.zip
-
+          
       - uses: chickensoft-games/setup-godot@v1
         name: Setup Godot
         with:
@@ -58,6 +51,8 @@ jobs:
           version: ${{ matrix.godot-version }}
           # Use .NET-enabled version of Godot (the default is also true).
           use-dotnet: true
+          # Use release version of GodotSharp
+          godot-sharp-release: true
 
       - name: Build Project
         run: |

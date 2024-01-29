@@ -24,13 +24,12 @@ jobs:
     container: ubuntu:lunar-20231128
 
     steps:
-      # Cleanup required for self-hosted runner
-      - run: |
-          find . ! -type d -delete
-          find . -depth -path './*' -type d -exec rmdir {} +
-          ls -al -R /home
-          ls -al -R /github
-          # find . /github/home/downloads ! -type d -delete
+      - name: Pre-Cleanup
+        run: |
+          find . -iname "*" -exec rm -rf {} \;
+          find . -iname ".*" -exec rm -rf {} \;
+          find /github -iname "*" -exec rm -rf {} \;
+          find /github -iname ".*" -exec rm -rf {} \;
 
       - uses: actions/checkout@v4
         name: Checkout
@@ -67,3 +66,11 @@ jobs:
           dotnet restore
           godot --headless --build-solutions --quit || exit 0
           dotnet build
+
+      - name: Post-Cleanup
+        run: |
+          find . -iname "*" -exec rm -rf {} \;
+          find . -iname ".*" -exec rm -rf {} \;
+          find /github -iname "*" -exec rm -rf {} \;
+          find /github -iname ".*" -exec rm -rf {} \;
+        if: always()

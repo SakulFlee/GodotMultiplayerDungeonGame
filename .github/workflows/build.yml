@@ -26,8 +26,8 @@ jobs:
     steps:
       - name: Pre-Cleanup
         run: |
-          find . -delete
-          find /github -delete
+          find . -delete || true
+          find /github -delete || true
         if: always()
 
       - uses: actions/checkout@v4
@@ -68,6 +68,6 @@ jobs:
 
       - name: Post-Cleanup
         run: |
-          find . -delete
-          find /github -delete
+          find . -delete || true
+          find /github -delete || true
         if: always()

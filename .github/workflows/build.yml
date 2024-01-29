@@ -24,12 +24,6 @@ jobs:
     container: ubuntu:lunar-20231128
 
     steps:
-      - name: Pre-Cleanup
-        run: |
-          find . -delete || true
-          find /github -delete || true
-        if: always()
-
       - uses: actions/checkout@v4
         name: Checkout
 
@@ -65,9 +59,3 @@ jobs:
           dotnet restore
           godot --headless --build-solutions --quit || exit 0
           dotnet build
-
-      - name: Post-Cleanup
-        run: |
-          find . -delete || true
-          find /github -delete || true
-        if: always()

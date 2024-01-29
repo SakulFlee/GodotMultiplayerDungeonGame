@@ -26,10 +26,11 @@ jobs:
     steps:
       - name: Pre-Cleanup
         run: |
-          find . -iname "*" -exec rm -rf {} \;
-          find . -iname ".*" -exec rm -rf {} \;
-          find /github -iname "*" -exec rm -rf {} \;
-          find /github -iname ".*" -exec rm -rf {} \;
+          find . -type f -delete
+          find . -type d -rmdir
+          find /github -type f -delete
+          find /github -type d -rmdir
+        if: always()
 
       - uses: actions/checkout@v4
         name: Checkout
@@ -69,8 +70,8 @@ jobs:
 
       - name: Post-Cleanup
         run: |
-          find . -iname "*" -exec rm -rf {} \;
-          find . -iname ".*" -exec rm -rf {} \;
-          find /github -iname "*" -exec rm -rf {} \;
-          find /github -iname ".*" -exec rm -rf {} \;
+          find . -type f -delete
+          find . -type d -rmdir
+          find /github -type f -delete
+          find /github -type d -rmdir
         if: always()

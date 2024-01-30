@@ -8,9 +8,8 @@
 
 'Scene: Dungeon':
 - changed-files:
-  - any-glob-to-any-file: 'Scripts/Dungeon/**'
-  - any: 'Scene/Dungeon.cs'
+  - any-glob-to-any-file: ['Scripts/Dungeon/**', 'Scene/Dungeon.cs']
     
 'Scene: Main Menu':
 - changed-files:
-  - any: 'Scene/MainMenu.cs'
+  - any-glob-to-any-file: 'Scene/MainMenu.cs'

@@ -49,7 +49,7 @@ jobs:
         with:
           # Version must include major, minor, and patch, and be >= 4.0.0
           # version: ${{ matrix.godot-version }}
-          version: 4.0.0
+          version: 4.1.0
           # Use .NET-enabled version of Godot (the default is also true).
           use-dotnet: true
           # Use release version of GodotSharp

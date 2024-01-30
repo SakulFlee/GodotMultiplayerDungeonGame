@@ -44,7 +44,7 @@ jobs:
         with:
           dotnet-version: ${{ env.CSharpVersion }}
 
-      - uses: SakulFlee/setup-godot@v0.0.7
+      - uses: SakulFlee/setup-godot@v0.0.9
         name: Setup Godot
         with:
           # Version must include major, minor, and patch, and be >= 4.0.0

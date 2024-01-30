@@ -28,16 +28,10 @@ jobs:
         name: Checkout
 
       - name: APT update
-        run: apt update
-
-      - name: APT install cURL
-        run: apt install -y curl
-
-      - name: APT install unzip
-        run: apt install -y unzip
-
-      - name: APT install libicu-dev
-        run: apt install -y libicu-dev
+        run: |
+          apt-get update
+          apt-get upgrade -y
+          apt-get install -y curl unzip libicu-dev
 
       - uses: actions/setup-dotnet@v4
         name: Setup .NET SDK

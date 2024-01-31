@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://bsw23g6dtkaro"]
+
+[ext_resource type="PackedScene" uid="uid://ccspd27ng3bp7" path="res://Models/Cells/Base/BaseWallCorner.blend" id="1_t5rq5"]
+[ext_resource type="Material" uid="uid://ceb2xmc62qfw2" path="res://Materials/Stone.tres" id="2_0magg"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_25buw"]
+size = Vector3(2, 2, 2)
+
+[node name="DefaultWallCorner" instance=ExtResource("1_t5rq5")]
+
+[node name="BaseWallCorner" parent="." index="0"]
+surface_material_override/0 = ExtResource("2_0magg")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." index="1"]
+
+[node name="CollisionShape3D Cube" type="CollisionShape3D" parent="StaticBody3D" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_25buw")

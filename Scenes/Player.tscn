@@ -8,6 +8,9 @@
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2q161"]
 albedo_color = Color(0, 0.647059, 0.894118, 1)
+emission_enabled = true
+emission = Color(0, 0.647059, 0.894118, 1)
+emission_energy_multiplier = 0.1
 
 [sub_resource type="PrismMesh" id="PrismMesh_t4n3j"]
 
@@ -36,10 +39,19 @@ mesh = SubResource("PrismMesh_t4n3j")
 surface_material_override/0 = SubResource("StandardMaterial3D_akxbf")
 
 [node name="Camera" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 0, 2, 0)
+transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 2.5, 2, 0)
 
 [node name="SpringArm3D" type="SpringArm3D" parent="Camera"]
-spring_length = 15.0
+spring_length = 5.0
 
 [node name="Camera3D" type="Camera3D" parent="Camera/SpringArm3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, -5.96047e-08, 0, 5.96047e-08, 1, 0, 0, 0)
+light_color = Color(0.333333, 0.117647, 0, 1)
+light_energy = 32.0
+shadow_enabled = true
+distance_fade_enabled = true
+omni_range = 7.5
+omni_attenuation = 0.5

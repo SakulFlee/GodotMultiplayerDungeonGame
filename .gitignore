@@ -27,3 +27,7 @@ mono_crash.*.json
 
 # ZIP Files
 *.zip
+
+# Blender
+*.blend*
+!*.blend

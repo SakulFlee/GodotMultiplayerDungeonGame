@@ -1,15 +1,21 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Godot;
 using Godot.Collections;
 
 public partial class GameDungeon : Node3D
 {
 	#region Exports
+	[ExportGroup("Dungeon")]
 	[Export]
 	public Vector2I DungeonSize = new Vector2I(75, 75);
 
+	[Export]
+	public int Seed = 0;
+
+	[Export]
+	public bool RandomizeSeedOnStart = true;
+
+	[ExportGroup("Internals")]
 	[Export]
 	public bool PrintResultToConsole = true;
 
@@ -35,7 +41,10 @@ public partial class GameDungeon : Node3D
 
 	public override void _Ready()
 	{
-		GridGenerator = new GridGenerator(((uint)DungeonSize.X, (uint)DungeonSize.Y));
+		if (RandomizeSeedOnStart) Seed = Random.Shared.Next(int.MaxValue);
+		GD.Print($"Seed: {Seed}");
+
+		GridGenerator = new GridGenerator(((uint)DungeonSize.X, (uint)DungeonSize.Y), seed: Seed);
 		GridGenerator.Automate(printFinalResultToConsole: PrintResultToConsole);
 
 		PlaceOnGridMap();

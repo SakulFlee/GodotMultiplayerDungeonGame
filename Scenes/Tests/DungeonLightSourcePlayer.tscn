@@ -2,10 +2,11 @@
 
 [ext_resource type="Script" path="res://Scripts/Scene/GameDungeon.cs" id="1_2j3vs"]
 [ext_resource type="PackedScene" uid="uid://suys18uknhvs" path="res://Models/Cells/Default/DefaultFloor.tscn" id="3_b5u2g"]
-[ext_resource type="PackedScene" uid="uid://cu6jgake217ql" path="res://Models/Cells/Default/DefaultWall.tscn" id="4_ncdde"]
-[ext_resource type="PackedScene" uid="uid://dxsv255mfnps0" path="res://Models/Cells/Default/DefaultWallTop.tscn" id="5_fnbne"]
+[ext_resource type="PackedScene" uid="uid://dxsv255mfnps0" path="res://Models/Cells/Default/DefaultWallEdge.tscn" id="4_ncdde"]
+[ext_resource type="PackedScene" uid="uid://dxsv255mfnps0" path="res://Models/Cells/Default/DefaultWallEdge.tscn" id="5_fnbne"]
 [ext_resource type="PackedScene" uid="uid://bsw23g6dtkaro" path="res://Models/Cells/Default/DefaultWallCorner.tscn" id="6_ughke"]
 [ext_resource type="PackedScene" uid="uid://da6bmqp6hwakk" path="res://Scenes/Player.tscn" id="7_mv1v8"]
+
 
 [sub_resource type="Environment" id="Environment_ykyx5"]
 background_mode = 2

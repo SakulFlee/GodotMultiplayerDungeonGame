@@ -20,6 +20,9 @@ public partial class GameDungeon : Node3D
 	public bool PrintResultToConsole = true;
 
 	[Export]
+	public GridTheme GridTheme;
+
+	[Export]
 	public Dictionary CellLookup = new()
 	{
 		{"Stone", 0},
@@ -27,7 +30,7 @@ public partial class GameDungeon : Node3D
 	};
 	#endregion
 
-	private GridMap GridMap;
+	private Node3D Cells;
 
 	private Player Player;
 
@@ -35,7 +38,7 @@ public partial class GameDungeon : Node3D
 
 	public override void _EnterTree()
 	{
-		GridMap = GetNode<GridMap>("%GridMap");
+		Cells = GetNode<Node3D>("%Cells");
 		Player = GetNode<Player>("%Player");
 	}
 
@@ -47,7 +50,7 @@ public partial class GameDungeon : Node3D
 		GridGenerator = new GridGenerator(((uint)DungeonSize.X, (uint)DungeonSize.Y), seed: Seed);
 		GridGenerator.Automate(printFinalResultToConsole: PrintResultToConsole);
 
-		PlaceOnGridMap();
+		PlaceDungeon();
 
 		PlacePlayer();
 	}
@@ -70,21 +73,12 @@ public partial class GameDungeon : Node3D
 		// player.Position = gridPosition;
 	}
 
-	private void PlaceOnGridMap()
+	private void PlaceDungeon()
 	{
-		GridMap.Clear();
+		// Clear children if any persists
+		foreach(var child in Cells.GetChildren())
+			Cells.RemoveChild(child);
 
-		for (var x = 0; x < DungeonSize.X; x++)
-		{
-			for (var y = 0; y < DungeonSize.Y; y++)
-			{
-				var cell = GridGenerator.Grid[x, y];
-
-				GridMap.SetCellItem(new Vector3I(x, 0, y), (int)CellLookup["Dirt"]);
-
-				if (!cell.IsFloor)
-					GridMap.SetCellItem(new Vector3I(x, 1, y), (int)CellLookup["Stone"]);
-			}
-		}
+		GridTranslator.TranslateAndPlace(Cells, GridGenerator, GridTheme);
 	}
 }

@@ -5,7 +5,7 @@ using Godot.Collections;
 public partial class GameDungeon : Node3D
 {
 	#region Exports
-	[ExportGroup("Dungeon")]
+	[ExportCategory("Dungeon")]
 	[Export]
 	public Vector2I DungeonSize = new Vector2I(75, 75);
 
@@ -15,12 +15,15 @@ public partial class GameDungeon : Node3D
 	[Export]
 	public bool RandomizeSeedOnStart = true;
 
-	[ExportGroup("Internals")]
+	[ExportCategory("Internals")]
 	[Export]
 	public bool PrintResultToConsole = true;
 
 	[Export]
 	public GridTheme GridTheme;
+
+	[Export]
+	public Vector2 CellSize = new Vector2(2, 2);
 
 	[Export]
 	public Dictionary CellLookup = new()
@@ -76,9 +79,9 @@ public partial class GameDungeon : Node3D
 	private void PlaceDungeon()
 	{
 		// Clear children if any persists
-		foreach(var child in Cells.GetChildren())
+		foreach (var child in Cells.GetChildren())
 			Cells.RemoveChild(child);
 
-		GridTranslator.TranslateAndPlace(Cells, GridGenerator, GridTheme);
+		GridTranslator.TranslateAndPlace(Cells, GridGenerator, GridTheme, CellSize);
 	}
 }

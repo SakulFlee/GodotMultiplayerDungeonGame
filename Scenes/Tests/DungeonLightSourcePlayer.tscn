@@ -1,12 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://dttstqsdap2ax"]
+[gd_scene load_steps=7 format=3 uid="uid://dttstqsdap2ax"]
 
 [ext_resource type="Script" path="res://Scripts/Scene/GameDungeon.cs" id="1_2j3vs"]
 [ext_resource type="PackedScene" uid="uid://suys18uknhvs" path="res://Models/Cells/Default/DefaultFloor.tscn" id="3_b5u2g"]
 [ext_resource type="PackedScene" uid="uid://dxsv255mfnps0" path="res://Models/Cells/Default/DefaultWallEdge.tscn" id="4_ncdde"]
-[ext_resource type="PackedScene" uid="uid://dxsv255mfnps0" path="res://Models/Cells/Default/DefaultWallEdge.tscn" id="5_fnbne"]
 [ext_resource type="PackedScene" uid="uid://bsw23g6dtkaro" path="res://Models/Cells/Default/DefaultWallCorner.tscn" id="6_ughke"]
 [ext_resource type="PackedScene" uid="uid://da6bmqp6hwakk" path="res://Scenes/Player.tscn" id="7_mv1v8"]
-
 
 [sub_resource type="Environment" id="Environment_ykyx5"]
 background_mode = 2
@@ -667,16 +665,16 @@ transform = Transform3D(-7.54976e-07, 0, -0.999996, 0, 1, 0, 0.999996, 0, -7.549
 [node name="DefaultWall14" parent="World" instance=ExtResource("4_ncdde")]
 transform = Transform3D(-6.47693e-07, 0, -0.999997, 0, 1, 0, 0.999997, 0, -6.47693e-07, -9.99999, 0, -4)
 
-[node name="DefaultWallTop2" parent="World" instance=ExtResource("5_fnbne")]
+[node name="DefaultWallTop2" parent="World" instance=ExtResource("4_ncdde")]
 transform = Transform3D(-1, -9.44658e-05, -0.000299532, -9.44661e-05, 1, 8.07307e-07, 0.000299532, 8.41485e-07, -1, 16, 2, -10)
 
-[node name="DefaultWallTop5" parent="World" instance=ExtResource("5_fnbne")]
+[node name="DefaultWallTop5" parent="World" instance=ExtResource("4_ncdde")]
 transform = Transform3D(-1, -9.44658e-05, -0.000299532, -9.44661e-05, 1, 8.07307e-07, 0.000299532, 8.41485e-07, -1, 16, 2, 16)
 
-[node name="DefaultWallTop6" parent="World" instance=ExtResource("5_fnbne")]
+[node name="DefaultWallTop6" parent="World" instance=ExtResource("4_ncdde")]
 transform = Transform3D(-1, -9.44658e-05, -0.000299532, -9.44661e-05, 1, 8.07307e-07, 0.000299532, 8.41485e-07, -1, -10, 2, -10)
 
-[node name="DefaultWallTop4" parent="World" instance=ExtResource("5_fnbne")]
+[node name="DefaultWallTop4" parent="World" instance=ExtResource("4_ncdde")]
 transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, -10, 2, 16)
 
 [node name="DefaultWall19" parent="World" instance=ExtResource("4_ncdde")]

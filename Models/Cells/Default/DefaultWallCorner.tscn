@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://bsw23g6dtkaro"]
 
-[ext_resource type="PackedScene" uid="uid://ccspd27ng3bp7" path="res://Models/Cells/Base/BaseWallCorner.blend" id="1_t5rq5"]
+[ext_resource type="PackedScene" uid="uid://bd3nnouusp5ie" path="res://Models/Cells/Base/BaseWallCorner.blend" id="1_t5rq5"]
 [ext_resource type="Material" uid="uid://ceb2xmc62qfw2" path="res://Materials/Stone.tres" id="2_0magg"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_25buw"]

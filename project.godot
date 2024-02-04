@@ -10,6 +10,7 @@ config_version=5
 
 [application]
 
+config/name="Multiplayer Dungeon Game"
 config/tags=PackedStringArray("game", "private")
 run/main_scene="res://Scenes/Main.tscn"
 config/features=PackedStringArray("4.2", "C#")
@@ -17,3 +18,13 @@ config/features=PackedStringArray("4.2", "C#")
 [dotnet]
 
 project/assembly_name="GodotMultiplayerDungeonGame"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+textures/canvas_textures/default_texture_repeat=1
+textures/vram_compression/import_s3tc_bptc=true
+textures/vram_compression/import_etc2_astc=true
+textures/default_filters/use_nearest_mipmap_filter=true
+textures/decals/filter=0
+textures/light_projectors/filter=0

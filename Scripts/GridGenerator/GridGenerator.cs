@@ -17,7 +17,8 @@ public class GridGenerator
     public int SizeX { get => Grid.GetUpperBound(0); }
     public int SizeY { get => Grid.GetUpperBound(1); }
 
-    public uint HighestArea { get; private set; } = 0;
+    public uint AreaCount { get; private set; } = 0;
+    public uint RoomCount { get; private set; } = 0;
 
     public GridGenerator((uint, uint) gridSize, int seed = 12345, double floorPercentage = 0.60, bool printToConsole = false)
     {
@@ -83,7 +84,7 @@ public class GridGenerator
                     if (x == 0 || y == 0 || x == SizeX - 1 || y == SizeY - 1)
                         Grid[x, y] = new GridCell(isFloor: false);
 
-        for (uint area = 1; area <= HighestArea; area++)
+        for (uint area = 1; area <= AreaCount; area++)
         {
             uint minX = int.MaxValue;
             uint minY = int.MaxValue;
@@ -126,7 +127,7 @@ public class GridGenerator
 
         if (redoAreas)
         {
-            HighestArea = 0;
+            AreaCount = 0;
             for (var x = 0; x < SizeX; x++)
                 for (var y = 0; y < SizeY; y++)
                     Grid[x, y].Area = 0;
@@ -179,6 +180,8 @@ public class GridGenerator
     {
         foreach (var room in rooms)
             Grid = room.Apply(Grid);
+
+        RoomCount = (uint)rooms.Count();
 
         if (printToConsole)
         {
@@ -297,7 +300,7 @@ public class GridGenerator
         } while (true);
 
         // Set counter
-        HighestArea = area;
+        AreaCount = area;
     }
 
     public void AssignAreaNeighboursAndSelf((uint, uint) position, uint area)

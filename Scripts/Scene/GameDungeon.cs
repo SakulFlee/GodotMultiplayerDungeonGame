@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Godot;
 using Godot.Collections;
 
@@ -58,22 +59,28 @@ public partial class GameDungeon : Node3D
 		PlacePlayer();
 	}
 
+	public override void _Process(double delta)
+	{
+		GD.Print($"FPS: {Engine.GetFramesPerSecond()} ({Performance.GetMonitor(Performance.Monitor.TimeFps)}ms) - Draw Calls: {Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame)} - Primitives: {Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame)}");
+	}
+
 	private void PlacePlayer()
 	{
-		// TODO
-		// // Find spawn
-		// var spawnRoom = placedDungeonRooms.Find(x => x.Flag == "spawn");
+		var roomId = GridGenerator.R.Next(0, (int)GridGenerator.RoomCount - 1);
 
-		// // TODO: Generate doors/entrances and use those instead
-		// // For now: Place in the center of the room and pray it's a floor? xD
+		var roomCells = GridGenerator.FindCell((x, y, cell) => cell.Room == roomId);
 
-		// var centerX = spawnRoom.Location.X + spawnRoom.Width / 2;
-		// var centerY = spawnRoom.Location.Y + spawnRoom.Height / 2;
+		var cellId = GridGenerator.R.Next(0, roomCells.Count - 1);
+		var cell = roomCells[cellId];
 
-		// var gridPosition = gridMap.MapToLocal(new Vector3I(centerX, 2, centerY));
+		var playerPosition = new Vector3(
+			cell.Item1 * CellSize.X,
+			1,
+			cell.Item2 * CellSize.Y
+		);
 
-		// GD.Print($"Placing player at {centerX}-{centerY}; Grid: {gridPosition} spawn room: {spawnRoom.Location}");
-		// player.Position = gridPosition;
+		Player.Position = playerPosition;
+		Player.Rotation = Vector3.Zero;
 	}
 
 	private void PlaceDungeon()

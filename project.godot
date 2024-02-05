@@ -20,7 +20,7 @@ project/assembly_name="GodotMultiplayerDungeonGame"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/match_maker/plugin.cfg", "res://addons/nklbdev.importality/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot-box2d/plugin.cfg", "res://addons/match_maker/plugin.cfg", "res://addons/nklbdev.importality/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")
 
 [input]
 

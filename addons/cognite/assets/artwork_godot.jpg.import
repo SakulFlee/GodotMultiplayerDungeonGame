@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgsq8vhvavv6k"
 path.s3tc="res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.s3tc.ctex"
+path.etc2="res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://addons/cognite/assets/artwork_godot.jpg"
-dest_files=["res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.s3tc.ctex"]
+dest_files=["res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.s3tc.ctex", "res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.etc2.ctex"]
 
 [params]
 

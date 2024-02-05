@@ -13,3 +13,7 @@
 'Scene: Main Menu':
 - changed-files:
   - any-glob-to-any-file: 'Scene/MainMenu.cs'
+
+'Task: Godot':
+- changed-files:
+  - any-glob-to-any-file: ['project.godot', 'addons/**', '*.csproj', '*.sln']

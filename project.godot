@@ -17,3 +17,7 @@ config/features=PackedStringArray("4.2", "C#")
 [dotnet]
 
 project/assembly_name="GodotMultiplayerDungeonGame"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/match_maker/plugin.cfg", "res://addons/nklbdev.importality/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")

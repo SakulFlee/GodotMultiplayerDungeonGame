@@ -17,3 +17,7 @@ config/features=PackedStringArray("4.2", "C#")
 [dotnet]
 
 project/assembly_name="GodotMultiplayerDungeonGame"
+
+[rendering]
+
+driver/threads/thread_model=2

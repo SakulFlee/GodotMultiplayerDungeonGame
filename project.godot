@@ -41,7 +41,7 @@ project/assembly_name="GodotMultiplayerDungeonGame"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/DestructiblesCSharp/plugin.cfg", "res://addons/anthonyec.camera_preview/plugin.cfg", "res://addons/beehave/plugin.cfg", "res://addons/better-terrain/plugin.cfg", "res://addons/camera_2d_plus/plugin.cfg", "res://addons/cognite/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/editor_physics/plugin.cfg", "res://addons/godot-box2d/plugin.cfg", "res://addons/gui_auto_layout/plugin.cfg", "res://addons/markdownlabel/plugin.cfg", "res://addons/match_maker/plugin.cfg", "res://addons/nklbdev.importality/plugin.cfg", "res://addons/orchestrator/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/resources_spreadsheet_view/plugin.cfg", "res://addons/run-configs/plugin.cfg", "res://addons/sprite_painter/plugin.cfg", "res://addons/visual_signals_3d/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")
+enabled=PackedStringArray("res://addons/DestructiblesCSharp/plugin.cfg", "res://addons/beehave/plugin.cfg", "res://addons/better-terrain/plugin.cfg", "res://addons/cognite/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/editor_physics/plugin.cfg", "res://addons/godot-box2d/plugin.cfg", "res://addons/gui_auto_layout/plugin.cfg", "res://addons/markdownlabel/plugin.cfg", "res://addons/match_maker/plugin.cfg", "res://addons/nklbdev.importality/plugin.cfg", "res://addons/orchestrator/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/resources_spreadsheet_view/plugin.cfg", "res://addons/run-configs/plugin.cfg", "res://addons/sprite_painter/plugin.cfg", "res://addons/visual_signals_3d/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")
 
 [input]
 

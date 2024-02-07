@@ -20,6 +20,7 @@ resources_spreadsheet_view/context_menu_on_leftclick=false
 
 [application]
 
+config/name="Multiplayer Dungeon Game"
 config/tags=PackedStringArray("game", "private")
 run/main_scene="res://Scenes/Main.tscn"
 config/features=PackedStringArray("4.2", "C#")

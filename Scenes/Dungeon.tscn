@@ -1,0 +1,34 @@
+[gd_scene load_steps=8 format=3 uid="uid://b50hot8qikkq0"]
+
+[ext_resource type="Script" path="res://Scripts/Scene/Dungeon.cs" id="1_5yba8"]
+[ext_resource type="TileSet" uid="uid://da4kkk1fgipy5" path="res://tile_sets/dungeon_stone_wall.tres" id="2_gds1c"]
+[ext_resource type="Script" path="res://Scripts/Components/DungeonGrid.cs" id="2_j034v"]
+[ext_resource type="Script" path="res://Scripts/Resources/TileConfig.cs" id="2_lpqmt"]
+
+[sub_resource type="Resource" id="Resource_b3brs"]
+script = ExtResource("2_lpqmt")
+Atlas = 1
+Coordinate = Vector2i(0, 3)
+
+[sub_resource type="Resource" id="Resource_ay8s5"]
+script = ExtResource("2_lpqmt")
+Atlas = 1
+Coordinate = Vector2i(1, 3)
+
+[sub_resource type="Resource" id="Resource_c1lse"]
+script = ExtResource("2_lpqmt")
+Atlas = 1
+Coordinate = Vector2i(1, 2)
+
+[node name="Dungeon" type="Node2D"]
+script = ExtResource("1_5yba8")
+
+[node name="DungeonGrid" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_j034v")
+tileSet = ExtResource("2_gds1c")
+FloorTiles = Array[Object]([SubResource("Resource_b3brs"), SubResource("Resource_ay8s5")])
+WallTiles = Array[Object]([SubResource("Resource_c1lse")])
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 322)

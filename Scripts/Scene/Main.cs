@@ -9,7 +9,7 @@ public partial class Main : Panel
 		timer = GetNode<Timer>("%Timer");
 		timer.Timeout += () =>
 		{
-			switchScene("GameDungeon");
+			switchScene("Dungeon");
 		};
 	}
 

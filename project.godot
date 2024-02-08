@@ -29,11 +29,6 @@ config/features=PackedStringArray("4.2", "C#")
 
 BeehaveGlobalMetrics="*res://addons/beehave/metrics/beehave_global_metrics.gd"
 BeehaveGlobalDebugger="*res://addons/beehave/debug/global_debugger.gd"
-BetterTerrain="*res://addons/better-terrain/BetterTerrain.gd"
-DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
-OrchestratorNodeFactory="*res://addons/orchestrator/orchestrator_node_factory.gd"
-Orchestrator="*res://addons/orchestrator/orchestrator.gd"
-RunConfigManager="*res://addons/run-configs/run-config-manager.gd"
 
 [dotnet]
 
@@ -41,7 +36,7 @@ project/assembly_name="GodotMultiplayerDungeonGame"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/DestructiblesCSharp/plugin.cfg", "res://addons/beehave/plugin.cfg", "res://addons/better-terrain/plugin.cfg", "res://addons/cognite/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/editor_physics/plugin.cfg", "res://addons/godot-box2d/plugin.cfg", "res://addons/gui_auto_layout/plugin.cfg", "res://addons/markdownlabel/plugin.cfg", "res://addons/match_maker/plugin.cfg", "res://addons/nklbdev.importality/plugin.cfg", "res://addons/orchestrator/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/resources_spreadsheet_view/plugin.cfg", "res://addons/run-configs/plugin.cfg", "res://addons/sprite_painter/plugin.cfg", "res://addons/visual_signals_3d/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")
+enabled=PackedStringArray("res://addons/markdownlabel/plugin.cfg", "res://addons/match_maker/plugin.cfg", "res://addons/nklbdev.importality/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/webrtc_sipsorcery/plugin.cfg")
 
 [input]
 
@@ -66,15 +61,10 @@ move_right={
 ]
 }
 
-[physics]
-
-2d/physics_engine="Box2D"
-
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
 textures/canvas_textures/default_texture_repeat=1
-driver/threads/thread_model=2
 textures/vram_compression/import_s3tc_bptc=true
 textures/vram_compression/import_etc2_astc=true
 textures/default_filters/use_nearest_mipmap_filter=true

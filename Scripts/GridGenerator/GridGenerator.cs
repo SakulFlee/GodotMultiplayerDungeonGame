@@ -421,8 +421,6 @@ public class GridGenerator
 
     public void PrintToConsole()
     {
-        Console.OutputEncoding = Encoding.UTF8;
-
         var output = "";
         for (var x = 0; x < SizeX; x++)
         {

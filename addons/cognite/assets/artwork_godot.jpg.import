@@ -2,28 +2,26 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgsq8vhvavv6k"
-path.s3tc="res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.s3tc.ctex"
-path.etc2="res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.etc2.ctex"
+uid="uid://v0xwwfme63ws"
+path="res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 
 [deps]
 
 source_file="res://addons/cognite/assets/artwork_godot.jpg"
-dest_files=["res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.s3tc.ctex", "res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.etc2.ctex"]
+dest_files=["res://.godot/imported/artwork_godot.jpg-b9478086c611d94244e4edce923e253c.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1
-compress/normal_map=2
+compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

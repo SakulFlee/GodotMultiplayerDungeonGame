@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b53h2juiqcl7h"
-path="res://.godot/imported/WallTileOrientation.svg-77f14f1a7279b281f32f4c67de0d183e.ctex"
+uid="uid://db32syi8rsv53"
+path="res://.godot/imported/WallTileOrientation.drawio.svg-a30485a5e0b88a061fcfbe05e3e3575b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://WallTileOrientation.svg"
-dest_files=["res://.godot/imported/WallTileOrientation.svg-77f14f1a7279b281f32f4c67de0d183e.ctex"]
+source_file="res://WallTileOrientation.drawio.svg"
+dest_files=["res://.godot/imported/WallTileOrientation.drawio.svg-a30485a5e0b88a061fcfbe05e3e3575b.ctex"]
 
 [params]
 

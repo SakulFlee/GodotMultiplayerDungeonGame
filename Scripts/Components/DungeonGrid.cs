@@ -13,7 +13,40 @@ public partial class DungeonGrid : Node2D
     public Array<TileConfig> FloorTiles;
 
     [Export]
-    public Array<TileConfig> WallTiles;
+    public Array<TileConfig> WallFrontCenter;
+
+    [Export]
+    public Array<TileConfig> WallFrontLeft;
+
+    [Export]
+    public Array<TileConfig> WallFrontRight;
+
+    [Export]
+    public Array<TileConfig> WallBackCenter;
+
+    [Export]
+    public Array<TileConfig> WallBackLeft;
+
+    [Export]
+    public Array<TileConfig> WallBackRight;
+
+    [Export]
+    public Array<TileConfig> WallEdgeLeft;
+
+    [Export]
+    public Array<TileConfig> WallEdgeRight;
+
+    [Export]
+    public Array<TileConfig> WallCornerInnerLeft;
+
+    [Export]
+    public Array<TileConfig> WallCornerInnerRight;
+
+    [Export]
+    public Array<TileConfig> WallCornerOuterLeft;
+
+    [Export]
+    public Array<TileConfig> WallCornerOuterRight;
 
     private TileMap tileMap = new();
 
@@ -147,23 +180,40 @@ public partial class DungeonGrid : Node2D
             }
     }
 
+    /// <summary>
+    /// Refer to `WallTileOrientation.drawio.svg` for an overview of what 
+    /// this function is doing...
+    /// </summary>
+    /// <param name="generator"></param>
     private void MakeWallLayerFromGenerator(GridGenerator generator)
     {
-        var possibleTiles = CompileProbabilityList(WallTiles);
-
         for (uint x = 0; x < generator.SizeX; x++)
             for (uint y = 0; y < generator.SizeY; y++)
             {
+                // Position X & Y are intentionally flipped here!
+                var position = new Vector2I((int)y, (int)x);
+
                 var cell = generator.GetCell((x, y));
+
+                // Skip non-walls
                 if (cell.IsFloor) continue;
 
-                var pickedCell = possibleTiles[Random.Shared.Next(0, possibleTiles.Count() - 1)];
-                tileMap.SetCell(
-                    layerBackground,
-                    new Vector2I((int)x, (int)y),
-                    pickedCell.Item1,
-                    pickedCell.Item2
-                );
+                var cellN = generator.GetCell((x - 1, y));
+                var cellS = generator.GetCell((x + 1, y));
+                var cellW = generator.GetCell((x, y - 1));
+                var cellE = generator.GetCell((x, y + 1));
+
+                if ((cellN == null || cellN.IsFloor) &&
+                    (cellS == null || cellS.IsFloor) &&
+                    cellE != null && !cellE.IsFloor &&
+                    cellW != null && !cellW.IsFloor)
+                {
+                    tileMap.SetCell(layerWalls, position, WallFrontCenter.First().Atlas, WallFrontCenter.First().Coordinate);
+                }
+                else
+                {
+                    GD.Print($"Unknown mapping at {x}:{y}! [{cell}]");
+                }
             }
     }
 }

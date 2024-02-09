@@ -377,7 +377,7 @@ public class GridGenerator
         else return grid[position.Item1, position.Item2];
     }
 
-    public uint CountNeighboursOfType((uint, uint) position, bool isFloor, bool countNull = true)
+    public uint CountNeighboursOfType((uint, uint) position, bool isFloor, bool countNull = true, bool interCardinalsToo = true)
     {
         // Cardinals
         var valueN = GetCell((position.Item1 - 1, position.Item2));
@@ -385,38 +385,58 @@ public class GridGenerator
         var valueE = GetCell((position.Item1, position.Item2 - 1));
         var valueW = GetCell((position.Item1, position.Item2 + 1));
 
-        // Inter-Cardinals
-        var valueNE = GetCell((position.Item1 - 1, position.Item2 - 1));
-        var valueSE = GetCell((position.Item1 + 1, position.Item2 - 1));
-        var valueNW = GetCell((position.Item1 - 1, position.Item2 + 1));
-        var valueSW = GetCell((position.Item1 + 1, position.Item2 + 1));
+        if (!interCardinalsToo)
+        {
+            return (uint)(0
+                + (valueN == null
+                    ? countNull ? 1 : 0
+                    : valueN.IsFloor == isFloor ? 1 : 0)
+                + (valueS == null
+                    ? countNull ? 1 : 0
+                    : valueS.IsFloor == isFloor ? 1 : 0)
+                + (valueE == null
+                    ? countNull ? 1 : 0
+                    : valueE.IsFloor == isFloor ? 1 : 0)
+                + (valueW == null
+                    ? countNull ? 1 : 0
+                    : valueW.IsFloor == isFloor ? 1 : 0)
+            );
+        }
+        else
+        {
+            // Inter-Cardinals
+            var valueNE = GetCell((position.Item1 - 1, position.Item2 - 1));
+            var valueSE = GetCell((position.Item1 + 1, position.Item2 - 1));
+            var valueNW = GetCell((position.Item1 - 1, position.Item2 + 1));
+            var valueSW = GetCell((position.Item1 + 1, position.Item2 + 1));
 
-        return (uint)(0
-            + (valueN == null
-                ? countNull ? 1 : 0
-                : valueN.IsFloor == isFloor ? 1 : 0)
-            + (valueS == null
-                ? countNull ? 1 : 0
-                : valueS.IsFloor == isFloor ? 1 : 0)
-            + (valueE == null
-                ? countNull ? 1 : 0
-                : valueE.IsFloor == isFloor ? 1 : 0)
-            + (valueW == null
-                ? countNull ? 1 : 0
-                : valueW.IsFloor == isFloor ? 1 : 0)
-            + (valueNE == null
-                ? countNull ? 1 : 0
-                : valueNE.IsFloor == isFloor ? 1 : 0)
-            + (valueSE == null
-                ? countNull ? 1 : 0
-                : valueSE.IsFloor == isFloor ? 1 : 0)
-            + (valueNW == null
-                ? countNull ? 1 : 0
-                : valueNW.IsFloor == isFloor ? 1 : 0)
-            + (valueSW == null
-                ? countNull ? 1 : 0
-                : valueSW.IsFloor == isFloor ? 1 : 0)
-        );
+            return (uint)(0
+                + (valueN == null
+                    ? countNull ? 1 : 0
+                    : valueN.IsFloor == isFloor ? 1 : 0)
+                + (valueS == null
+                    ? countNull ? 1 : 0
+                    : valueS.IsFloor == isFloor ? 1 : 0)
+                + (valueE == null
+                    ? countNull ? 1 : 0
+                    : valueE.IsFloor == isFloor ? 1 : 0)
+                + (valueW == null
+                    ? countNull ? 1 : 0
+                    : valueW.IsFloor == isFloor ? 1 : 0)
+                + (valueNE == null
+                    ? countNull ? 1 : 0
+                    : valueNE.IsFloor == isFloor ? 1 : 0)
+                + (valueSE == null
+                    ? countNull ? 1 : 0
+                    : valueSE.IsFloor == isFloor ? 1 : 0)
+                + (valueNW == null
+                    ? countNull ? 1 : 0
+                    : valueNW.IsFloor == isFloor ? 1 : 0)
+                + (valueSW == null
+                    ? countNull ? 1 : 0
+                    : valueSW.IsFloor == isFloor ? 1 : 0)
+            );
+        }
     }
 
     public void PrintToConsole()

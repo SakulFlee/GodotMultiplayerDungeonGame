@@ -6,4 +6,9 @@ public partial class TileConfig : Resource
 
     [Export]
     public Vector2I Coordinate = Vector2I.Zero;
+
+    public override string ToString()
+    {
+        return $"TileConfig {{Atlas={Atlas}, Coordinate={Coordinate}}}";
+    }
 }

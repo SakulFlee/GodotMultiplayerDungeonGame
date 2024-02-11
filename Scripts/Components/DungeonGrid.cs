@@ -5,12 +5,27 @@ using Godot.Collections;
 [GlobalClass]
 public partial class DungeonGrid : Node2D
 {
+    [ExportGroup("Tiles")]
     [Export]
     public TileSet tileSet { get; set; }
 
-    [ExportGroup("Tiles")]
     [Export]
     public Array<TileConfig> FloorTiles;
+
+    [Export]
+    public Array<TileConfig> WallAreaFloorTiles;
+
+    [Export]
+    public Array<TileConfig> WallBackCenter;
+
+    [Export]
+    public Array<TileConfig> WallBackRight;
+
+    [Export]
+    public Array<TileConfig> WallEdgeRight;
+
+    [Export]
+    public Array<TileConfig> WallFrontRight;
 
     [Export]
     public Array<TileConfig> WallFrontCenter;
@@ -19,34 +34,10 @@ public partial class DungeonGrid : Node2D
     public Array<TileConfig> WallFrontLeft;
 
     [Export]
-    public Array<TileConfig> WallFrontRight;
-
-    [Export]
-    public Array<TileConfig> WallBackCenter;
-
-    [Export]
-    public Array<TileConfig> WallBackLeft;
-
-    [Export]
-    public Array<TileConfig> WallBackRight;
-
-    [Export]
     public Array<TileConfig> WallEdgeLeft;
 
     [Export]
-    public Array<TileConfig> WallEdgeRight;
-
-    [Export]
-    public Array<TileConfig> WallCornerInnerLeft;
-
-    [Export]
-    public Array<TileConfig> WallCornerInnerRight;
-
-    [Export]
-    public Array<TileConfig> WallCornerOuterLeft;
-
-    [Export]
-    public Array<TileConfig> WallCornerOuterRight;
+    public Array<TileConfig> WallBackLeft;
 
     private TileMap tileMap = new();
 
@@ -99,33 +90,59 @@ public partial class DungeonGrid : Node2D
         var zeroLayer = 0;
         var zeroCoordinate = new Vector2I(0, 0);
 
-        // Retrieve existing tile information to restore later
-        var existingTileAtlas = tileMap.GetCellSourceId(zeroLayer, zeroCoordinate);
-        var existingTileCoordinate = tileMap.GetCellAtlasCoords(zeroLayer, zeroCoordinate);
+        float probeTile()
+        {
+            // Set the cell we want to know the probability of
+            tileMap.SetCell(zeroLayer, zeroCoordinate, tileConfig.Atlas, tileConfig.Coordinate);
 
-        // Set the cell we want to know the probability of
-        tileMap.SetCell(zeroLayer, zeroCoordinate, tileConfig.Atlas, tileConfig.Coordinate);
+            // Retrieve probability of the cell
+            var probabilityCellData = tileMap.GetCellTileData(zeroLayer, zeroCoordinate);
+            var result = (float)probabilityCellData.Get("probability");
 
-        // Retrieve probability of the cell
-        var probabilityCellData = tileMap.GetCellTileData(zeroLayer, zeroCoordinate);
-        var probability = (float)probabilityCellData.Get("probability");
+            // Unset cell at zero position
+            tileMap.SetCell(zeroLayer, zeroCoordinate, -1);
 
-        // Restore previous cell
-        tileMap.SetCell(zeroLayer, zeroCoordinate, existingTileAtlas, existingTileCoordinate);
+            return result;
+        }
+
+        float probability;
+        var modeProbeLayer = tileMap.GetLayersCount() == 0;
+        if (modeProbeLayer)
+        {
+            // Add temporary layer for probing
+            tileMap.AddLayer(zeroLayer);
+            tileMap.SetLayerName(zeroLayer, "__PROBABILITY_PROBE");
+
+            probability = probeTile();
+
+            // Remove temporary layer
+            tileMap.RemoveLayer(zeroLayer);
+        }
+        else
+        {
+            // Retrieve existing tile information to restore later
+            var existingTileAtlas = tileMap.GetCellSourceId(zeroLayer, zeroCoordinate);
+            var existingTileCoordinate = tileMap.GetCellAtlasCoords(zeroLayer, zeroCoordinate);
+
+            probability = probeTile();
+
+            // Restore previous cell
+            tileMap.SetCell(zeroLayer, zeroCoordinate, existingTileAtlas, existingTileCoordinate);
+        }
 
         // Return findings!
         return probability;
     }
 
-    private List<(int, Vector2I)> CompileProbabilityList(Array<TileConfig> tileConfigs)
+    private List<TileConfig> CompileProbabilityList(Array<TileConfig> tileConfigs)
     {
         // List of possible tiles to be chosen from.
         // There will be **intentionally** duplicates in here.
         // Example: A probability of 0.95 will result in 95 duplicated objects
         // being added (this number will be adjusted based on 
         // the maximum probability).
-        var possibleTiles = new List<(int, Vector2I)>();
-        var probabilityMap = new System.Collections.Generic.Dictionary<(int, Vector2I), float>();
+        var possibleTiles = new List<TileConfig>();
+        var probabilityMap = new System.Collections.Generic.Dictionary<TileConfig, float>();
 
         // Calculate the relative probability.
         // In an ideal case this will be 1.0 (100%).
@@ -137,7 +154,7 @@ public partial class DungeonGrid : Node2D
         {
             var probability = FindProbabilityOfTile(tileConfig);
             relativeMaximumProbability += probability;
-            probabilityMap.Add((tileConfig.Atlas, tileConfig.Coordinate), probability);
+            probabilityMap.Add(tileConfig, probability);
         }
 
         // For each tile that can be placed here, calculate the adjusted
@@ -151,32 +168,141 @@ public partial class DungeonGrid : Node2D
         // Add the tile configuration that many times to the list.
         foreach (var tileConfig in tileConfigs)
         {
-            var probability = probabilityMap[(tileConfig.Atlas, tileConfig.Coordinate)];
+            var probability = probabilityMap[tileConfig];
             var adjustedProbability = probability / relativeMaximumProbability;
             var objectCountToAdd = (int)(adjustedProbability * 100);
-            var localTile = (tileConfig.Atlas, tileConfig.Coordinate);
 
             for (var i = 0; i < objectCountToAdd; i++)
-                possibleTiles.Add(localTile);
+                possibleTiles.Add(tileConfig);
         }
 
         return possibleTiles;
     }
 
+    // TODO: Randomize cells if multiple are possible to avoid "3x3 spots"
+    private void placeCells(uint x, uint y, TileConfig cell, int layer, bool isGridCoordinate = true)
+    {
+        for (var ix = 0; ix < 3; ix++)
+            for (var iy = 0; iy < 3; iy++)
+            {
+                var actualX = (isGridCoordinate ? x * 3 : x) + ix;
+                var actualY = (isGridCoordinate ? y * 3 : y) + iy;
+
+                tileMap.SetCell(
+                    layer,
+                    // Positions are intentionally flipped!
+                    new Vector2I((int)actualY, (int)actualX),
+                    cell.Atlas,
+                    cell.Coordinate
+                );
+            }
+    }
+
+    private void placeCells(
+        uint x, uint y,
+        TileConfig cellTL, TileConfig cellTC, TileConfig cellTR,
+        TileConfig cellML, TileConfig cellMC, TileConfig cellMR,
+        TileConfig cellBL, TileConfig cellBC, TileConfig cellBR,
+        int layer, bool isGridCoordinate = true)
+    {
+        if (cellTL != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y),
+                (int)(isGridCoordinate ? x * 3 : x)
+            ),
+            cellTL.Atlas, cellTL.Coordinate);
+
+        if (cellTC != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y) + 1,
+                (int)(isGridCoordinate ? x * 3 : x)
+            ),
+            cellTC.Atlas, cellTC.Coordinate);
+
+        if (cellTR != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y) + 2,
+                (int)(isGridCoordinate ? x * 3 : x)
+            ),
+            cellTR.Atlas, cellTR.Coordinate);
+
+        if (cellML != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y),
+                (int)(isGridCoordinate ? x * 3 : x) + 1
+            ),
+            cellML.Atlas, cellML.Coordinate);
+
+        if (cellMC != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y) + 1,
+                (int)(isGridCoordinate ? x * 3 : x) + 1
+            ),
+            cellMC.Atlas, cellMC.Coordinate);
+
+        if (cellMR != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y) + 2,
+                (int)(isGridCoordinate ? x * 3 : x) + 1
+            ),
+            cellMR.Atlas, cellMR.Coordinate);
+
+        if (cellBL != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y),
+                (int)(isGridCoordinate ? x * 3 : x) + 2
+            ),
+            cellBL.Atlas, cellBL.Coordinate);
+
+        if (cellBC != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y) + 1,
+                (int)(isGridCoordinate ? x * 3 : x) + 2
+            ),
+            cellBC.Atlas, cellBC.Coordinate);
+
+        if (cellBR != null)
+            tileMap.SetCell(layer,
+            // Positions are flipped intentionally
+            new Vector2I(
+                (int)(isGridCoordinate ? y * 3 : y) + 2,
+                (int)(isGridCoordinate ? x * 3 : x) + 2
+            ),
+            cellBR.Atlas, cellBR.Coordinate);
+    }
+
     private void MakeBackgroundLayerFromGenerator(GridGenerator generator)
     {
-        var possibleTiles = CompileProbabilityList(FloorTiles);
+        var possibleTilesFloor = CompileProbabilityList(FloorTiles);
+        var possibleTilesWallArea = CompileProbabilityList(WallAreaFloorTiles);
 
         for (uint x = 0; x < generator.SizeX; x++)
             for (uint y = 0; y < generator.SizeY; y++)
             {
-                var pickedCell = possibleTiles[Random.Shared.Next(0, possibleTiles.Count() - 1)];
-                tileMap.SetCell(
-                    layerBackground,
-                    new Vector2I((int)x, (int)y),
-                    pickedCell.Item1,
-                    pickedCell.Item2
-                );
+                TileConfig pickedCell;
+                var cell = generator.GetCell((x, y));
+                if (cell.IsFloor)
+                    pickedCell = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+                else
+                    pickedCell = possibleTilesWallArea[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+
+                placeCells(x, y, pickedCell, layerBackground);
             }
     }
 
@@ -187,12 +313,21 @@ public partial class DungeonGrid : Node2D
     /// <param name="generator"></param>
     private void MakeWallLayerFromGenerator(GridGenerator generator)
     {
+        var possibleTilesFloor = CompileProbabilityList(FloorTiles);
+        var possibleTilesWallArea = CompileProbabilityList(WallAreaFloorTiles);
+
+        var possibleWallBackCenter = CompileProbabilityList(WallBackCenter);
+        var possibleWallBackRight = CompileProbabilityList(WallBackRight);
+        var possibleWallEdgeRight = CompileProbabilityList(WallEdgeRight);
+        var possibleWallFrontRight = CompileProbabilityList(WallFrontRight);
+        var possibleWallFrontCenter = CompileProbabilityList(WallFrontCenter);
+        var possibleWallFrontLeft = CompileProbabilityList(WallFrontLeft);
+        var possibleWallEdgeLeft = CompileProbabilityList(WallEdgeLeft);
+        var possibleWallBackLeft = CompileProbabilityList(WallBackLeft);
+
         for (uint x = 0; x < generator.SizeX; x++)
             for (uint y = 0; y < generator.SizeY; y++)
             {
-                // Position X & Y are intentionally flipped here!
-                var position = new Vector2I((int)y, (int)x);
-
                 var cell = generator.GetCell((x, y));
 
                 // Skip non-walls
@@ -203,17 +338,160 @@ public partial class DungeonGrid : Node2D
                 var cellW = generator.GetCell((x, y - 1));
                 var cellE = generator.GetCell((x, y + 1));
 
-                if ((cellN == null || cellN.IsFloor) &&
-                    (cellS == null || cellS.IsFloor) &&
-                    cellE != null && !cellE.IsFloor &&
-                    cellW != null && !cellW.IsFloor)
+                TileConfig wallCellTL = null;
+                TileConfig wallCellTC = null;
+                TileConfig wallCellTR = null;
+                TileConfig wallCellML = null;
+                TileConfig wallCellMC = null;
+                TileConfig wallCellMR = null;
+                TileConfig wallCellBL = null;
+                TileConfig wallCellBC = null;
+                TileConfig wallCellBR = null;
+
+                TileConfig floorCellTL = null;
+                TileConfig floorCellTC = null;
+                TileConfig floorCellTR = null;
+                TileConfig floorCellML = null;
+                TileConfig floorCellMC = null;
+                TileConfig floorCellMR = null;
+                TileConfig floorCellBL = null;
+                TileConfig floorCellBC = null;
+                TileConfig floorCellBR = null;
+
+                // #  F  #
+                // W [W] W
+                // #  F  #
+                if (
+                    (cellN?.IsFloor ?? false) &&
+                    (cellS?.IsFloor ?? false) &&
+                    (!cellE?.IsFloor ?? false) &&
+                    (!cellW?.IsFloor ?? false))
                 {
-                    tileMap.SetCell(layerWalls, position, WallFrontCenter.First().Atlas, WallFrontCenter.First().Coordinate);
+                    // Walls
+                    wallCellTL = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
+                    wallCellTC = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
+                    wallCellTR = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
+
+                    wallCellBL = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
+                    wallCellBC = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
+                    wallCellBR = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
+
+                    // Floors
+                    floorCellTL = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+                    floorCellTC = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+                    floorCellTR = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+
+                    floorCellML = possibleTilesWallArea[Random.Shared.Next(0, possibleTilesWallArea.Count() - 1)];
+                    floorCellMC = possibleTilesWallArea[Random.Shared.Next(0, possibleTilesWallArea.Count() - 1)];
+                    floorCellMR = possibleTilesWallArea[Random.Shared.Next(0, possibleTilesWallArea.Count() - 1)];
                 }
-                else
+                // #  W  #
+                // W [W] W
+                // #  F  #
+                else if (
+                    (!cellN?.IsFloor ?? false) &&
+                    (cellS?.IsFloor ?? false) &&
+                    (!cellE?.IsFloor ?? false) &&
+                    (!cellW?.IsFloor ?? false))
                 {
-                    GD.Print($"Unknown mapping at {x}:{y}! [{cell}]");
+                    wallCellBL = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
+                    wallCellBC = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
+                    wallCellBR = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
                 }
+                // #  F  #
+                // W [W] W
+                // #  W  #
+                else if (
+                    (cellN?.IsFloor ?? false) &&
+                    (!cellS?.IsFloor ?? false) &&
+                    (!cellE?.IsFloor ?? false) &&
+                    (!cellW?.IsFloor ?? false))
+                {
+                    wallCellTL = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
+                    wallCellTC = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
+                    wallCellTR = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
+
+                    floorCellTL = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+                    floorCellTC = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+                    floorCellTR = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
+                }
+
+
+
+                // // Front Left
+                // else if (cellN != null && !cellN.IsFloor &&
+                //     (cellS == null || cellS.IsFloor) &&
+                //     cellE != null && !cellE.IsFloor &&
+                //     (cellW == null || cellW.IsFloor))
+                // {
+                //     tileMap.SetCell(layerWalls, position, WallFrontLeft.First().Atlas, WallFrontLeft.First().Coordinate);
+                // }
+                // // Front Right
+                // else if (cellN != null && !cellN.IsFloor &&
+                //     (cellS == null || cellS.IsFloor) &&
+                //     (cellE == null || cellE.IsFloor) &&
+                //     cellW != null && !cellW.IsFloor)
+                // {
+                //     tileMap.SetCell(layerWalls, position, WallFrontRight.First().Atlas, WallFrontRight.First().Coordinate);
+                // }
+                // // Back Center
+                // else if (cellN != null && cellN.IsFloor &&
+                //     (cellS == null || !cellS.IsFloor) &&
+                //     cellE != null && !cellE.IsFloor &&
+                //     cellW != null && !cellW.IsFloor)
+                // {
+                //     tileMap.SetCell(layerWalls, position, WallBackCenter.First().Atlas, WallBackCenter.First().Coordinate);
+                // }
+                // // Back Left
+                // else if ((cellN == null || cellN.IsFloor) &&
+                //     cellS != null && !cellS.IsFloor &&
+                //     cellE != null && !cellE.IsFloor &&
+                //     (cellW == null || cellW.IsFloor))
+                // {
+                //     tileMap.SetCell(layerWalls, position, WallFrontLeft.First().Atlas, WallFrontLeft.First().Coordinate);
+                // }
+                // // Back Right
+                // else if ((cellN == null || cellN.IsFloor) &&
+                //     cellS != null && !cellS.IsFloor &&
+                //     (cellE == null || cellE.IsFloor) &&
+                //     cellW != null && !cellW.IsFloor)
+                // {
+                //     tileMap.SetCell(layerWalls, position, WallFrontRight.First().Atlas, WallFrontRight.First().Coordinate);
+                // }
+                // // Edge Left
+                // else if (cellN != null && !cellN.IsFloor &&
+                //     cellS != null && !cellS.IsFloor &&
+                //     (cellE == null || cellE.IsFloor) &&
+                //     cellW != null && !cellW.IsFloor)
+                // {
+                //     tileMap.SetCell(layerWalls, position, WallEdgeLeft.First().Atlas, WallEdgeLeft.First().Coordinate);
+                // }
+                // // Edge Right
+                // else if (cellN != null && !cellN.IsFloor &&
+                //     cellS != null && !cellS.IsFloor &&
+                //     cellE != null && cellE.IsFloor &&
+                //     (cellW == null || cellW.IsFloor))
+                // {
+                //     tileMap.SetCell(layerWalls, position, WallEdgeLeft.First().Atlas, WallEdgeLeft.First().Coordinate);
+                // }
+                // else
+                // {
+                //     // GD.Print($"Unknown mapping at {x}:{y}! [{cell}]");
+                // }
+
+
+                placeCells(x, y,
+                    floorCellTL, floorCellTC, floorCellTR,
+                    floorCellML, floorCellMC, floorCellMR,
+                    floorCellBL, floorCellBC, floorCellBR,
+                    layerBackground
+                );
+                placeCells(x, y,
+                    wallCellTL, wallCellTC, wallCellTR,
+                    wallCellML, wallCellMC, wallCellMR,
+                    wallCellBL, wallCellBC, wallCellBR,
+                    layerWalls
+                );
             }
     }
 }

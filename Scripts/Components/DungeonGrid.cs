@@ -39,6 +39,12 @@ public partial class DungeonGrid : Node2D
     [Export]
     public Array<TileConfig> WallBackLeft;
 
+    [Export]
+    public Array<TileConfig> WallInverseCornerLeft;
+
+    [Export]
+    public Array<TileConfig> WallInverseCornerRight;
+
     private TileMap tileMap = new();
 
     private int layerCounter = 0;
@@ -358,6 +364,7 @@ public partial class DungeonGrid : Node2D
                 TileConfig floorCellBC = null;
                 TileConfig floorCellBR = null;
 
+                // --- Vertical Walls ---
                 // #  F  #
                 // W [W] W
                 // #  F  #
@@ -376,14 +383,10 @@ public partial class DungeonGrid : Node2D
                     wallCellBC = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
                     wallCellBR = possibleWallFrontCenter[Random.Shared.Next(0, possibleWallFrontCenter.Count() - 1)];
 
-                    // Floors
+                    // // Floors
                     floorCellTL = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
                     floorCellTC = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
                     floorCellTR = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
-
-                    floorCellML = possibleTilesWallArea[Random.Shared.Next(0, possibleTilesWallArea.Count() - 1)];
-                    floorCellMC = possibleTilesWallArea[Random.Shared.Next(0, possibleTilesWallArea.Count() - 1)];
-                    floorCellMR = possibleTilesWallArea[Random.Shared.Next(0, possibleTilesWallArea.Count() - 1)];
                 }
                 // #  W  #
                 // W [W] W
@@ -415,8 +418,71 @@ public partial class DungeonGrid : Node2D
                     floorCellTC = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
                     floorCellTR = possibleTilesFloor[Random.Shared.Next(0, possibleTilesFloor.Count() - 1)];
                 }
+                // --- Horizontal Walls ---
+                // #  W  #
+                // F [W] F
+                // #  W  #
+                else if (
+                    (!cellN?.IsFloor ?? false) &&
+                    (!cellS?.IsFloor ?? false) &&
+                    (cellE?.IsFloor ?? false) &&
+                    (cellW?.IsFloor ?? false))
+                {
+                    // Walls
+                    wallCellTL = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                    wallCellML = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                    wallCellBL = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
 
+                    wallCellTR = possibleWallEdgeLeft[Random.Shared.Next(0, possibleWallEdgeLeft.Count() - 1)];
+                    wallCellMR = possibleWallEdgeLeft[Random.Shared.Next(0, possibleWallEdgeLeft.Count() - 1)];
+                    wallCellBR = possibleWallEdgeLeft[Random.Shared.Next(0, possibleWallEdgeLeft.Count() - 1)];
+                }
+                // #  W  #
+                // W [W] F
+                // #  W  #
+                else if (
+                    (!cellN?.IsFloor ?? false) &&
+                    (!cellS?.IsFloor ?? false) &&
+                    (cellE?.IsFloor ?? false) &&
+                    (!cellW?.IsFloor ?? false))
+                {
+                    // Walls
+                    wallCellTR = possibleWallEdgeLeft[Random.Shared.Next(0, possibleWallEdgeLeft.Count() - 1)];
+                    wallCellMR = possibleWallEdgeLeft[Random.Shared.Next(0, possibleWallEdgeLeft.Count() - 1)];
+                    wallCellBR = possibleWallEdgeLeft[Random.Shared.Next(0, possibleWallEdgeLeft.Count() - 1)];
+                }
+                // #  W  #
+                // F [W] W
+                // #  W  #
+                else if (
+                    (!cellN?.IsFloor ?? false) &&
+                    (!cellS?.IsFloor ?? false) &&
+                    (!cellE?.IsFloor ?? false) &&
+                    (cellW?.IsFloor ?? false))
+                {
+                    // Walls
+                    wallCellTL = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                    wallCellML = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                    wallCellBL = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                }
+                // --- Corners ---
+                // #  F  #
+                // F [W] W
+                // #  W  #
+                else if (
+                    (cellN?.IsFloor ?? false) &&
+                    (!cellS?.IsFloor ?? false) &&
+                    (!cellE?.IsFloor ?? false) &&
+                    (cellW?.IsFloor ?? false))
+                {
+                    // Walls
+                    wallCellTC = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
+                    wallCellTR = possibleWallBackCenter[Random.Shared.Next(0, possibleWallBackCenter.Count() - 1)];
 
+                    wallCellTL = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                    wallCellML = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                    wallCellBL = possibleWallEdgeRight[Random.Shared.Next(0, possibleWallEdgeRight.Count() - 1)];
+                }
 
                 // // Front Left
                 // else if (cellN != null && !cellN.IsFloor &&

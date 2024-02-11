@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://b50hot8qikkq0"]
+[gd_scene load_steps=20 format=3 uid="uid://b50hot8qikkq0"]
 
 [ext_resource type="Script" path="res://Scripts/Scene/Dungeon.cs" id="1_5yba8"]
 [ext_resource type="Script" path="res://Scripts/Components/DungeonGrid.cs" id="2_j034v"]
@@ -114,6 +114,16 @@ script = ExtResource("2_lpqmt")
 Atlas = 0
 Coordinate = Vector2i(0, 0)
 
+[sub_resource type="Resource" id="Resource_jsf0g"]
+script = ExtResource("2_lpqmt")
+Atlas = 0
+Coordinate = Vector2i(3, 0)
+
+[sub_resource type="Resource" id="Resource_vclkg"]
+script = ExtResource("2_lpqmt")
+Atlas = 0
+Coordinate = Vector2i(3, 1)
+
 [node name="Dungeon" type="Node2D"]
 script = ExtResource("1_5yba8")
 
@@ -131,6 +141,8 @@ WallFrontCenter = Array[Object]([SubResource("Resource_a10fo")])
 WallFrontLeft = Array[Object]([SubResource("Resource_vnb4c")])
 WallEdgeLeft = Array[Object]([SubResource("Resource_gv26f")])
 WallBackLeft = Array[Object]([SubResource("Resource_t7ino")])
+WallInverseCornerLeft = Array[Object]([SubResource("Resource_jsf0g")])
+WallInverseCornerRight = Array[Object]([SubResource("Resource_vclkg")])
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1154, 654)

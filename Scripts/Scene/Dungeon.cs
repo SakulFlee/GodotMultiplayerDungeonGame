@@ -23,15 +23,15 @@ public partial class Dungeon : Node2D
 
     public override void _Ready()
     {
-        if (seed <= 0) seed = Random.Shared.Next();
-        GD.Print($"Seed: {seed}");
+        // if (seed <= 0) seed = Random.Shared.Next();
+        // GD.Print($"Seed: {seed}");
 
-        gridGenerator = new(
-            ((uint)dungeonSize.X, (uint)dungeonSize.Y),
-            seed
-        );
+        // gridGenerator = new(
+        //     ((uint)dungeonSize.X, (uint)dungeonSize.Y),
+        //     seed
+        // );
 
-        gridGenerator.Automate(printFinalResultToConsole: printFinalResultToConsole);
-        dungeonGrid.FromGridGenerator(gridGenerator);
+        // gridGenerator.Automate(printFinalResultToConsole: printFinalResultToConsole);
+        // dungeonGrid.FromGridGenerator(gridGenerator);
     }
 }

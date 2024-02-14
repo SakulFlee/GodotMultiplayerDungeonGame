@@ -369,7 +369,11 @@ public class GridGenerator
         return FindCell((x, y, cell) => cell.Area == area);
     }
 
+    public GridCell? GetCell((int, int) position) => GetCell(Grid, ((uint)position.Item1, (uint)position.Item2));
+
     public GridCell? GetCell((uint, uint) position) => GetCell(Grid, position);
+
+    public static GridCell? GetCell(GridCell[,] grid, (int, int) position) => GetCell(grid, ((int)position.Item1, (int)position.Item2));
 
     public static GridCell? GetCell(GridCell[,] grid, (uint, uint) position)
     {

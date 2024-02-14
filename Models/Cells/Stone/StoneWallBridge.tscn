@@ -1,0 +1,21 @@
+[gd_scene load_steps=6 format=3 uid="uid://doxet0tbqhhit"]
+
+[ext_resource type="PackedScene" uid="uid://droruyit0l2fw" path="res://Models/Cells/Base/WallBridge.blend" id="1_5bnwl"]
+[ext_resource type="Texture2D" uid="uid://cyumceotgr766" path="res://Sprites/test_a.kra" id="2_4sbhl"]
+[ext_resource type="Texture2D" uid="uid://cwoqxdscnbbyn" path="res://Sprites/test_b.kra" id="3_5n2w3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_17b5m"]
+albedo_texture = ExtResource("2_4sbhl")
+texture_filter = 4
+texture_repeat = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2f11y"]
+albedo_texture = ExtResource("3_5n2w3")
+texture_filter = 4
+
+[node name="StoneWallBridge" instance=ExtResource("1_5bnwl")]
+
+[node name="WallBridge" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -1, -1)
+surface_material_override/0 = SubResource("StandardMaterial3D_17b5m")
+surface_material_override/1 = SubResource("StandardMaterial3D_2f11y")

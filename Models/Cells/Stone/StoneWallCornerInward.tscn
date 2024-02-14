@@ -1,0 +1,20 @@
+[gd_scene load_steps=6 format=3 uid="uid://bb050fauiglqa"]
+
+[ext_resource type="PackedScene" uid="uid://cyvlgapari2ns" path="res://Models/Cells/Base/WallCornerInward.blend" id="1_65ibi"]
+[ext_resource type="Texture2D" uid="uid://cyumceotgr766" path="res://Sprites/test_a.kra" id="2_tw1pt"]
+[ext_resource type="Texture2D" uid="uid://cwoqxdscnbbyn" path="res://Sprites/test_b.kra" id="3_u1bxh"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s63lb"]
+albedo_texture = ExtResource("2_tw1pt")
+texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ekkf2"]
+albedo_texture = ExtResource("3_u1bxh")
+texture_filter = 4
+
+[node name="StoneStoneWallCornerInward" instance=ExtResource("1_65ibi")]
+
+[node name="WallCornerInward" parent="." index="0"]
+transform = Transform3D(0, -1, 2.98023e-08, -2.98023e-08, 0, -1, 1, -2.98023e-08, 0, -1, -1, -5.96046e-08)
+surface_material_override/0 = SubResource("StandardMaterial3D_s63lb")
+surface_material_override/1 = SubResource("StandardMaterial3D_ekkf2")

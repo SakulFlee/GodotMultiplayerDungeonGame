@@ -1,0 +1,26 @@
+[gd_scene load_steps=7 format=3 uid="uid://d3abyk6eiwubp"]
+
+[ext_resource type="PackedScene" uid="uid://b3mk41d8vgqqe" path="res://Models/Cells/Base/WallCornerOutwardDouble.blend" id="1_0rmxo"]
+[ext_resource type="Texture2D" uid="uid://cyumceotgr766" path="res://Sprites/test_a.kra" id="2_lolsy"]
+[ext_resource type="Texture2D" uid="uid://cwoqxdscnbbyn" path="res://Sprites/test_b.kra" id="3_lhele"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1hllm"]
+albedo_texture = ExtResource("2_lolsy")
+texture_filter = 4
+texture_repeat = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hmlut"]
+albedo_texture = ExtResource("3_lhele")
+texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mpdf2"]
+albedo_texture = ExtResource("3_lhele")
+texture_filter = 4
+
+[node name="StoneWallCornerOutwardDouble" instance=ExtResource("1_0rmxo")]
+
+[node name="WallCornerOutwardDouble" parent="." index="0"]
+transform = Transform3D(0, -1, 2.98023e-08, -2.98023e-08, 0, -1, 1, -2.98023e-08, 0, -1, -1, -5.96046e-08)
+surface_material_override/0 = SubResource("StandardMaterial3D_1hllm")
+surface_material_override/1 = SubResource("StandardMaterial3D_hmlut")
+surface_material_override/2 = SubResource("StandardMaterial3D_mpdf2")

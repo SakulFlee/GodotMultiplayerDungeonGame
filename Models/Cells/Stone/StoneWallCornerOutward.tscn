@@ -1,0 +1,25 @@
+[gd_scene load_steps=7 format=3 uid="uid://elgxjrc456ai"]
+
+[ext_resource type="PackedScene" uid="uid://tsayxs2ytkn2" path="res://Models/Cells/Base/WallCornerOutward.blend" id="1_dqm4y"]
+[ext_resource type="Texture2D" uid="uid://cyumceotgr766" path="res://Sprites/test_a.kra" id="2_508jl"]
+[ext_resource type="Texture2D" uid="uid://cwoqxdscnbbyn" path="res://Sprites/test_b.kra" id="3_bq1kp"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qywqf"]
+albedo_texture = ExtResource("2_508jl")
+texture_filter = 4
+texture_repeat = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y8ecn"]
+albedo_texture = ExtResource("3_bq1kp")
+texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3hb7p"]
+albedo_texture = ExtResource("3_bq1kp")
+texture_filter = 4
+
+[node name="StoneWallCornerOutward" instance=ExtResource("1_dqm4y")]
+
+[node name="WallCornerOutward" parent="." index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_qywqf")
+surface_material_override/1 = SubResource("StandardMaterial3D_y8ecn")
+surface_material_override/2 = SubResource("StandardMaterial3D_3hb7p")

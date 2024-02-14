@@ -1,0 +1,26 @@
+[gd_scene load_steps=6 format=3 uid="uid://b74se28xic6r4"]
+
+[ext_resource type="Texture2D" uid="uid://cyumceotgr766" path="res://Sprites/test_a.kra" id="1_106wk"]
+[ext_resource type="Texture2D" uid="uid://cwoqxdscnbbyn" path="res://Sprites/test_b.kra" id="2_bqukq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5yimy"]
+albedo_texture = ExtResource("1_106wk")
+texture_filter = 4
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_de21c"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_t2mbi"]
+albedo_texture = ExtResource("2_bqukq")
+texture_filter = 4
+
+[node name="Wall" type="Node3D"]
+
+[node name="Wall" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 1, 1, 0)
+material_override = SubResource("StandardMaterial3D_5yimy")
+mesh = SubResource("PlaneMesh_de21c")
+
+[node name="Top" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.5, 1, 2, -0.5)
+material_override = SubResource("StandardMaterial3D_t2mbi")
+mesh = SubResource("PlaneMesh_de21c")

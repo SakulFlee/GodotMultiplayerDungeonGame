@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://do0upc452dth4"]
+
+[ext_resource type="Texture2D" uid="uid://dqsdm8y5e0gvq" path="res://Sprites/stone_floor_floor_1.kra" id="1_mhko6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3o0aq"]
+albedo_texture = ExtResource("1_mhko6")
+texture_filter = 4
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_mvv60"]
+
+[node name="Floor" type="Node3D"]
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
+material_override = SubResource("StandardMaterial3D_3o0aq")
+mesh = SubResource("PlaneMesh_mvv60")

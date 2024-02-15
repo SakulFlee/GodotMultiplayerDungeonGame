@@ -70,7 +70,95 @@ public partial class DungeonGrid : Node3D
 
     public void PlaceWalls()
     {
+        for (int x = 0; x < gridGenerator.SizeX; x++)
+        {
+            for (int y = 0; y < gridGenerator.SizeY; y++)
+            {
+                var cell = gridGenerator.GetCell((x, y));
+                if (cell.IsFloor) continue;
 
+                // Note X & Y between GridGenerator and Godot are FLIPPED!
+                // Normally, North would be (x - 1, y), but for Godot it's
+                // (x, y - 1)!
+                var cellN = gridGenerator.GetCell((x, y - 1));
+                var cellS = gridGenerator.GetCell((x, y + 1));
+                var cellW = gridGenerator.GetCell((x - 1, y));
+                var cellE = gridGenerator.GetCell((x + 1, y));
+
+                //    W
+                // W [W] W
+                //    F
+                if ((!cellN?.IsFloor ?? false) &&
+                    (cellS?.IsFloor ?? false) &&
+                    (!cellW?.IsFloor ?? false) &&
+                    (!cellE?.IsFloor ?? false))
+                {
+                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                    gridMap.SetCellItem(
+                        new Vector3I(x, 1, y),
+                        pickedCell,
+
+                        gridMap.GetOrthogonalIndexFromBasis(
+                            BasisHelper.DefaultState
+                        )
+                    );
+                }
+                //    W
+                // W [W] F
+                //    W
+                else if ((!cellN?.IsFloor ?? true) &&
+                    (!cellS?.IsFloor ?? true) &&
+                    (!cellW?.IsFloor ?? true) &&
+                    (cellE?.IsFloor ?? false))
+                {
+                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                    gridMap.SetCellItem(
+                        new Vector3I(x, 1, y),
+                        pickedCell,
+
+                        gridMap.GetOrthogonalIndexFromBasis(
+                            BasisHelper.RotateThriceAroundY
+                        )
+                    );
+                }
+                //    W
+                // F [W] W
+                //    W
+                else if ((!cellN?.IsFloor ?? true) &&
+                    (!cellS?.IsFloor ?? true) &&
+                    (cellW?.IsFloor ?? false) &&
+                    (!cellE?.IsFloor ?? true))
+                {
+                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                    gridMap.SetCellItem(
+                        new Vector3I(x, 1, y),
+                        pickedCell,
+
+                        gridMap.GetOrthogonalIndexFromBasis(
+                            BasisHelper.RotateFourTimesAroundY
+                        )
+                    );
+                }
+                //    F
+                // W [W] W
+                //    W
+                else if ((cellN?.IsFloor ?? false) &&
+                    (!cellS?.IsFloor ?? true) &&
+                    (!cellW?.IsFloor ?? true) &&
+                    (!cellE?.IsFloor ?? true))
+                {
+                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                    gridMap.SetCellItem(
+                        new Vector3I(x, 1, y),
+                        pickedCell,
+
+                        gridMap.GetOrthogonalIndexFromBasis(
+                            BasisHelper.RotateTwiceAroundY
+                        )
+                    );
+                }
+            }
+        }
     }
 
     // private void MakeBackgroundLayerFromGenerator(GridGenerator generator)

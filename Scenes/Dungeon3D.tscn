@@ -30,7 +30,7 @@ wallBridge = Array[int]([2])
 [node name="Dungeon3D" type="Node3D"]
 
 [node name="Player" type="Sprite3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0.25, 35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 2, 35)
 pixel_size = 0.0035
 billboard = 1
 shaded = true
@@ -40,7 +40,7 @@ texture = ExtResource("1_5211x")
 script = ExtResource("2_b2ygm")
 
 [node name="Camera3D" type="Camera3D" parent="Player"]
-transform = Transform3D(1, 0, 0, 0, 0.573576, 0.819152, 0, -0.819152, 0.573576, 0, 100, 100)
+transform = Transform3D(1, 0, 0, 0, 0.573576, 0.819152, 0, -0.819152, 0.573576, 0, 5, 5)
 current = true
 
 [node name="OmniLight3D" type="OmniLight3D" parent="Player"]

@@ -45,6 +45,26 @@ public partial class DungeonGrid : Node3D
 
         PlaceFloor();
         PlaceWalls();
+        // TODO: Fix Walls!
+        // If there are two walls facing the same direction AND another wall
+        // 90° from that facing in a 90° different direction from the other two 
+        // walls, this should be a "T" junction.
+        //
+        // Visual example:
+        // If we have a placement like this:
+        //    W
+        // W [W] W
+        //    F
+        // W = Walls
+        // F = Floors
+        // [W] = Wall we want to place (and later the "T" junction)
+        // 
+        // We can categorize the walls into the direction they are facing:
+        //      East/West
+        // South [South] South
+        // 
+        // If this is true and verified, we can replace the center [South]
+        // tile to a "T junction".
     }
 
     public void PlaceFloor()
@@ -85,77 +105,262 @@ public partial class DungeonGrid : Node3D
                 var cellW = gridGenerator.GetCell((x - 1, y));
                 var cellE = gridGenerator.GetCell((x + 1, y));
 
-                //    W
-                // W [W] W
-                //    F
-                if ((!cellN?.IsFloor ?? false) &&
-                    (cellS?.IsFloor ?? false) &&
-                    (!cellW?.IsFloor ?? false) &&
-                    (!cellE?.IsFloor ?? false))
-                {
-                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
-                    gridMap.SetCellItem(
-                        new Vector3I(x, 1, y),
-                        pickedCell,
+                var wallNeighbourCount =
+                      (!cellN?.IsFloor ?? false ? 1 : 0)
+                    + (!cellS?.IsFloor ?? false ? 1 : 0)
+                    + (!cellW?.IsFloor ?? false ? 1 : 0)
+                    + (!cellE?.IsFloor ?? false ? 1 : 0);
 
-                        gridMap.GetOrthogonalIndexFromBasis(
-                            BasisHelper.DefaultState
-                        )
-                    );
+                // --- Walls ---
+                if (wallNeighbourCount == 3)
+                {
+                    //    F
+                    // W [W] W
+                    //    W
+                    if ((cellN?.IsFloor ?? false) &&
+                       (!cellS?.IsFloor ?? true) &&
+                       (!cellW?.IsFloor ?? true) &&
+                       (!cellE?.IsFloor ?? true))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateTwiceAroundY
+                            )
+                        );
+                    }
+                    //    W
+                    // W [W] F
+                    //    W
+                    else if ((!cellN?.IsFloor ?? true) &&
+                        (!cellS?.IsFloor ?? true) &&
+                        (!cellW?.IsFloor ?? true) &&
+                        (cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateThriceAroundY
+                            )
+                        );
+                    }
+                    //    W
+                    // W [W] W
+                    //    F
+                    else if ((!cellN?.IsFloor ?? false) &&
+                         (cellS?.IsFloor ?? false) &&
+                         (!cellW?.IsFloor ?? false) &&
+                         (!cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.DefaultState
+                            )
+                        );
+                    }
+                    //    W
+                    // F [W] W
+                    //    W
+                    else if ((!cellN?.IsFloor ?? true) &&
+                        (!cellS?.IsFloor ?? true) &&
+                        (cellW?.IsFloor ?? false) &&
+                        (!cellE?.IsFloor ?? true))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateFourTimesAroundY
+                            )
+                        );
+                    }
                 }
-                //    W
-                // W [W] F
-                //    W
-                else if ((!cellN?.IsFloor ?? true) &&
-                    (!cellS?.IsFloor ?? true) &&
-                    (!cellW?.IsFloor ?? true) &&
-                    (cellE?.IsFloor ?? false))
+                // --- Bridge Walls
+                else if (wallNeighbourCount == 2)
                 {
-                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
-                    gridMap.SetCellItem(
-                        new Vector3I(x, 1, y),
-                        pickedCell,
-
-                        gridMap.GetOrthogonalIndexFromBasis(
-                            BasisHelper.RotateThriceAroundY
-                        )
-                    );
+                    //    F
+                    // W [W] W
+                    //    F
+                    if ((!cellN?.IsFloor ?? true) &&
+                        (!cellS?.IsFloor ?? true) &&
+                        (cellW?.IsFloor ?? false) &&
+                        (cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallBridge);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateThriceAroundY
+                            )
+                        );
+                    }
+                    //    W
+                    // F [W] F
+                    //    W
+                    else if ((cellN?.IsFloor ?? false) &&
+                        (cellS?.IsFloor ?? false) &&
+                        (!cellW?.IsFloor ?? true) &&
+                        (!cellE?.IsFloor ?? true))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallBridge);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateOnceAroundY
+                            )
+                        );
+                    }
+                    // --- Corners ---
+                    //    W
+                    // F [W] W
+                    //    F
+                    else if ((!cellN?.IsFloor ?? true) &&
+                        (cellS?.IsFloor ?? false) &&
+                        (cellW?.IsFloor ?? false) &&
+                        (!cellE?.IsFloor ?? true))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwards);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateFourTimesAroundY
+                            )
+                        );
+                    }
+                    //    F
+                    // F [W] W
+                    //    W
+                    else if ((cellN?.IsFloor ?? false) &&
+                        (!cellS?.IsFloor ?? true) &&
+                        (cellW?.IsFloor ?? false) &&
+                        (!cellE?.IsFloor ?? true))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwards);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateTwiceAroundY
+                            )
+                        );
+                    }
+                    //    F
+                    // W [W] F
+                    //    W
+                    else if ((cellN?.IsFloor ?? false) &&
+                        (!cellS?.IsFloor ?? true) &&
+                        (!cellW?.IsFloor ?? true) &&
+                        (cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwards);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateThriceAroundY
+                            )
+                        );
+                    }
+                    //    W
+                    // W [W] F
+                    //    F
+                    else if ((!cellN?.IsFloor ?? true) &&
+                        (cellS?.IsFloor ?? false) &&
+                        (!cellW?.IsFloor ?? true) &&
+                        (cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwards);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateOnceAroundY
+                            )
+                        );
+                    }
                 }
-                //    W
-                // F [W] W
-                //    W
-                else if ((!cellN?.IsFloor ?? true) &&
-                    (!cellS?.IsFloor ?? true) &&
-                    (cellW?.IsFloor ?? false) &&
-                    (!cellE?.IsFloor ?? true))
+                else if (wallNeighbourCount == 1)
                 {
-                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
-                    gridMap.SetCellItem(
-                        new Vector3I(x, 1, y),
-                        pickedCell,
-
-                        gridMap.GetOrthogonalIndexFromBasis(
-                            BasisHelper.RotateFourTimesAroundY
-                        )
-                    );
-                }
-                //    F
-                // W [W] W
-                //    W
-                else if ((cellN?.IsFloor ?? false) &&
-                    (!cellS?.IsFloor ?? true) &&
-                    (!cellW?.IsFloor ?? true) &&
-                    (!cellE?.IsFloor ?? true))
-                {
-                    var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
-                    gridMap.SetCellItem(
-                        new Vector3I(x, 1, y),
-                        pickedCell,
-
-                        gridMap.GetOrthogonalIndexFromBasis(
-                            BasisHelper.RotateTwiceAroundY
-                        )
-                    );
+                    // --- Inner Double Edge ---
+                    //    F
+                    // F [W] F
+                    //    W
+                    if ((cellN?.IsFloor ?? false) &&
+                        (!cellS?.IsFloor ?? true) &&
+                        (cellW?.IsFloor ?? false) &&
+                        (cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwardsDouble);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateThriceAroundY
+                            )
+                        );
+                    }
+                    //    F
+                    // W [W] F
+                    //    F
+                    else if ((cellN?.IsFloor ?? false) &&
+                        (cellS?.IsFloor ?? false) &&
+                        (!cellW?.IsFloor ?? true) &&
+                        (cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwardsDouble);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateOnceAroundY
+                            )
+                        );
+                    }
+                    //    W
+                    // F [W] F
+                    //    F
+                    else if ((!cellN?.IsFloor ?? true) &&
+                        (cellS?.IsFloor ?? false) &&
+                        (cellW?.IsFloor ?? false) &&
+                        (cellE?.IsFloor ?? false))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwardsDouble);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateFourTimesAroundY
+                            )
+                        );
+                    }
+                    //    F
+                    // F [W] W
+                    //    F
+                    else if ((cellN?.IsFloor ?? false) &&
+                        (cellS?.IsFloor ?? false) &&
+                        (cellW?.IsFloor ?? false) &&
+                        (!cellE?.IsFloor ?? true))
+                    {
+                        var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wallCornerInwardsDouble);
+                        gridMap.SetCellItem(
+                            new Vector3I(x, 1, y),
+                            pickedCell,
+                            gridMap.GetOrthogonalIndexFromBasis(
+                                BasisHelper.RotateTwiceAroundY
+                            )
+                        );
+                    }
                 }
             }
         }

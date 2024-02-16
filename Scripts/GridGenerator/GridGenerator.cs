@@ -446,9 +446,9 @@ public class GridGenerator
     public void PrintToConsole()
     {
         var output = "";
-        for (var x = 0; x < SizeX; x++)
+        for (var y = 0; y < SizeY; y++)
         {
-            for (var y = 0; y < SizeY; y++)
+            for (var x = 0; x < SizeX; x++)
                 output += Grid[x, y].GetCellString(y % 2 == 0);
 
             output += "\n";

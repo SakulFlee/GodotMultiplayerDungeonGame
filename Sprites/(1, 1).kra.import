@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqsdm8y5e0gvq"
-path.s3tc="res://.godot/imported/stone_floor_floor_1.kra-21ebd716e906bf95dc3a14b0c5d72c77.s3tc.ctex"
-path.etc2="res://.godot/imported/stone_floor_floor_1.kra-21ebd716e906bf95dc3a14b0c5d72c77.etc2.ctex"
+uid="uid://b3x7koi1b2yda"
+path.s3tc="res://.godot/imported/(1, 1).kra-9d13c5a603b4ca31e33e3cc50997cce1.s3tc.ctex"
+path.etc2="res://.godot/imported/(1, 1).kra-9d13c5a603b4ca31e33e3cc50997cce1.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://Sprites/stone_floor_floor_1.kra"
-dest_files=["res://.godot/imported/stone_floor_floor_1.kra-21ebd716e906bf95dc3a14b0c5d72c77.s3tc.ctex", "res://.godot/imported/stone_floor_floor_1.kra-21ebd716e906bf95dc3a14b0c5d72c77.etc2.ctex"]
+source_file="res://Sprites/(1, 1).kra"
+dest_files=["res://.godot/imported/(1, 1).kra-9d13c5a603b4ca31e33e3cc50997cce1.s3tc.ctex", "res://.godot/imported/(1, 1).kra-9d13c5a603b4ca31e33e3cc50997cce1.etc2.ctex"]
 
 [params]
 

@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://da6bmqp6hwakk"]
+
+[ext_resource type="Script" path="res://Scripts/Components/Player3D.cs" id="2_dbxvn"]
+[ext_resource type="PackedScene" uid="uid://d3q63a6k7lcms" path="res://Scenes/Entities/Entity.tscn" id="2_uymhy"]
+
+[node name="Player" type="Node3D"]
+script = ExtResource("2_dbxvn")
+
+[node name="Entity" parent="." instance=ExtResource("2_uymhy")]
+
+[node name="CameraOrigin" type="Node3D" parent="Entity"]
+transform = Transform3D(1, 0, 0, 0, 0.422618, 0.906308, 0, -0.906308, 0.422618, 0, 0, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="Entity/CameraOrigin"]
+spring_length = 3.5
+
+[node name="Camera3D" type="Camera3D" parent="Entity/CameraOrigin/SpringArm3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.5)
+current = true
+fov = 90.0

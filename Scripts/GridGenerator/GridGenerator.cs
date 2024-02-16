@@ -2,9 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Godot;
 
 public class GridGenerator
 {
@@ -369,7 +366,11 @@ public class GridGenerator
         return FindCell((x, y, cell) => cell.Area == area);
     }
 
+    public GridCell? GetCell((int, int) position) => GetCell(Grid, ((uint)position.Item1, (uint)position.Item2));
+
     public GridCell? GetCell((uint, uint) position) => GetCell(Grid, position);
+
+    public static GridCell? GetCell(GridCell[,] grid, (int, int) position) => GetCell(grid, ((int)position.Item1, (int)position.Item2));
 
     public static GridCell? GetCell(GridCell[,] grid, (uint, uint) position)
     {
@@ -377,7 +378,9 @@ public class GridGenerator
         else return grid[position.Item1, position.Item2];
     }
 
-    public uint CountNeighboursOfType((uint, uint) position, bool isFloor, bool countNull = true)
+    public uint CountNeighboursOfType((int, int) position, bool isFloor, bool countNull = true, bool interCardinalsToo = true) => CountNeighboursOfType(((uint)position.Item1, (uint)position.Item2), isFloor, countNull, interCardinalsToo);
+
+    public uint CountNeighboursOfType((uint, uint) position, bool isFloor, bool countNull = true, bool interCardinalsToo = true)
     {
         // Cardinals
         var valueN = GetCell((position.Item1 - 1, position.Item2));
@@ -385,46 +388,66 @@ public class GridGenerator
         var valueE = GetCell((position.Item1, position.Item2 - 1));
         var valueW = GetCell((position.Item1, position.Item2 + 1));
 
-        // Inter-Cardinals
-        var valueNE = GetCell((position.Item1 - 1, position.Item2 - 1));
-        var valueSE = GetCell((position.Item1 + 1, position.Item2 - 1));
-        var valueNW = GetCell((position.Item1 - 1, position.Item2 + 1));
-        var valueSW = GetCell((position.Item1 + 1, position.Item2 + 1));
+        if (!interCardinalsToo)
+        {
+            return (uint)(0
+                + (valueN == null
+                    ? countNull ? 1 : 0
+                    : valueN.IsFloor == isFloor ? 1 : 0)
+                + (valueS == null
+                    ? countNull ? 1 : 0
+                    : valueS.IsFloor == isFloor ? 1 : 0)
+                + (valueE == null
+                    ? countNull ? 1 : 0
+                    : valueE.IsFloor == isFloor ? 1 : 0)
+                + (valueW == null
+                    ? countNull ? 1 : 0
+                    : valueW.IsFloor == isFloor ? 1 : 0)
+            );
+        }
+        else
+        {
+            // Inter-Cardinals
+            var valueNE = GetCell((position.Item1 - 1, position.Item2 - 1));
+            var valueSE = GetCell((position.Item1 + 1, position.Item2 - 1));
+            var valueNW = GetCell((position.Item1 - 1, position.Item2 + 1));
+            var valueSW = GetCell((position.Item1 + 1, position.Item2 + 1));
 
-        return (uint)(0
-            + (valueN == null
-                ? countNull ? 1 : 0
-                : valueN.IsFloor == isFloor ? 1 : 0)
-            + (valueS == null
-                ? countNull ? 1 : 0
-                : valueS.IsFloor == isFloor ? 1 : 0)
-            + (valueE == null
-                ? countNull ? 1 : 0
-                : valueE.IsFloor == isFloor ? 1 : 0)
-            + (valueW == null
-                ? countNull ? 1 : 0
-                : valueW.IsFloor == isFloor ? 1 : 0)
-            + (valueNE == null
-                ? countNull ? 1 : 0
-                : valueNE.IsFloor == isFloor ? 1 : 0)
-            + (valueSE == null
-                ? countNull ? 1 : 0
-                : valueSE.IsFloor == isFloor ? 1 : 0)
-            + (valueNW == null
-                ? countNull ? 1 : 0
-                : valueNW.IsFloor == isFloor ? 1 : 0)
-            + (valueSW == null
-                ? countNull ? 1 : 0
-                : valueSW.IsFloor == isFloor ? 1 : 0)
-        );
+            return (uint)(0
+                + (valueN == null
+                    ? countNull ? 1 : 0
+                    : valueN.IsFloor == isFloor ? 1 : 0)
+                + (valueS == null
+                    ? countNull ? 1 : 0
+                    : valueS.IsFloor == isFloor ? 1 : 0)
+                + (valueE == null
+                    ? countNull ? 1 : 0
+                    : valueE.IsFloor == isFloor ? 1 : 0)
+                + (valueW == null
+                    ? countNull ? 1 : 0
+                    : valueW.IsFloor == isFloor ? 1 : 0)
+                + (valueNE == null
+                    ? countNull ? 1 : 0
+                    : valueNE.IsFloor == isFloor ? 1 : 0)
+                + (valueSE == null
+                    ? countNull ? 1 : 0
+                    : valueSE.IsFloor == isFloor ? 1 : 0)
+                + (valueNW == null
+                    ? countNull ? 1 : 0
+                    : valueNW.IsFloor == isFloor ? 1 : 0)
+                + (valueSW == null
+                    ? countNull ? 1 : 0
+                    : valueSW.IsFloor == isFloor ? 1 : 0)
+            );
+        }
     }
 
     public void PrintToConsole()
     {
         var output = "";
-        for (var x = 0; x < SizeX; x++)
+        for (var y = 0; y < SizeY; y++)
         {
-            for (var y = 0; y < SizeY; y++)
+            for (var x = 0; x < SizeX; x++)
                 output += Grid[x, y].GetCellString(y % 2 == 0);
 
             output += "\n";

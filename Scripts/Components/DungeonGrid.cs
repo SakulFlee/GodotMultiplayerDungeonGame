@@ -1,169 +1,156 @@
 using System;
-using System.Collections.Generic;
 using Godot.Collections;
 
 [GlobalClass]
-public partial class DungeonGrid : Node2D
+public partial class DungeonGrid : Node3D
 {
+    /// <summary>
+    /// Set to -1 for randomize on start
+    /// </summary>
+    [ExportGroup("Generator")]
     [Export]
-    public TileSet tileSet { get; set; }
-
-    [ExportGroup("Tiles")]
-    [Export]
-    public Array<TileConfig> FloorTiles;
+    public int seed = -1;
 
     [Export]
-    public Array<TileConfig> WallTiles;
+    public Vector2I dungeonSize = new Vector2I(70, 70);
 
-    private TileMap tileMap = new();
+    [ExportGroup("Godot")]
+    [Export]
+    public Vector2I cellSizeOffset = new Vector2I(2, 2);
 
-    private int layerCounter = 0;
-    private int layerBackground = -1;
-    private int layerWalls = -1;
-    private int layerDecorations = -1;
+    [ExportGroup("Cells")]
+    [Export]
+    public MeshLibrary meshLibrary { get; set; }
+
+    [Export]
+    public Array<int> floorTiles = new();
+
+    [Export]
+    public Array<int> wallTiles = new();
+
+    [ExportGroup("Debug")]
+    [Export]
+    public bool printGeneratorResultToConsole = false;
+
+    private GridMap gridMap = new();
+    private GridGenerator gridGenerator;
 
     public override void _EnterTree()
     {
+        if (meshLibrary == null) GD.PrintErr("[DungeonGrid] Mesh Library not set!");
+        if (floorTiles.Count() == 0) GD.PrintErr("[DungeonGrid] No Floor cells set!");
+        if (wallTiles.Count() == 0) GD.PrintErr("[DungeonGrid] No Wall cells set!");
     }
 
     public override void _Ready()
     {
-        AddChild(tileMap);
+        AddChild(gridMap);
+        gridMap.MeshLibrary = meshLibrary;
 
-        tileMap.TileSet = tileSet;
+        if (seed < 0) seed = Random.Shared.Next(int.MaxValue);
+        GD.Print($"[DungeonGrid] Seed: {seed}");
 
-        layerBackground = AddLayer("Background");
-        layerWalls = AddLayer("Walls");
-        layerDecorations = AddLayer("Decorations");
+        gridGenerator = new GridGenerator(((uint)dungeonSize.X, (uint)dungeonSize.Y), seed: seed);
+        gridGenerator.Automate(printFinalResultToConsole: printGeneratorResultToConsole);
+
+        PlaceGeneratorOutput();
+        FixCorners();
     }
 
-    private int AddLayer(string name)
+    public int PickTile(bool isFloor) => isFloor
+        ? floorTiles[Random.Shared.Next(floorTiles.Count() - 1)]
+        : wallTiles[Random.Shared.Next(wallTiles.Count() - 1)];
+
+    public void PlaceGeneratorOutput()
     {
-        var layerId = layerCounter++;
-        tileMap.AddLayer(layerId);
-        tileMap.SetLayerName(layerId, name);
-        return layerId;
-    }
-
-    public void FromGridGenerator(GridGenerator generator)
-    {
-        MakeBackgroundLayerFromGenerator(generator);
-        MakeWallLayerFromGenerator(generator);
-    }
-
-    /// <summary>
-    /// ⚠️ Workaround ⚠️
-    /// </summary>
-    /// <param name="tileConfig"></param>
-    /// <returns></returns> <summary>
-    /// 
-    /// </summary>
-    /// <param name="tileConfig"></param>
-    /// <returns></returns>
-    private float FindProbabilityOfTile(TileConfig tileConfig)
-    {
-        // Constants
-        var zeroLayer = 0;
-        var zeroCoordinate = new Vector2I(0, 0);
-
-        // Retrieve existing tile information to restore later
-        var existingTileAtlas = tileMap.GetCellSourceId(zeroLayer, zeroCoordinate);
-        var existingTileCoordinate = tileMap.GetCellAtlasCoords(zeroLayer, zeroCoordinate);
-
-        // Set the cell we want to know the probability of
-        tileMap.SetCell(zeroLayer, zeroCoordinate, tileConfig.Atlas, tileConfig.Coordinate);
-
-        // Retrieve probability of the cell
-        var probabilityCellData = tileMap.GetCellTileData(zeroLayer, zeroCoordinate);
-        var probability = (float)probabilityCellData.Get("probability");
-
-        // Restore previous cell
-        tileMap.SetCell(zeroLayer, zeroCoordinate, existingTileAtlas, existingTileCoordinate);
-
-        // Return findings!
-        return probability;
-    }
-
-    private List<(int, Vector2I)> CompileProbabilityList(Array<TileConfig> tileConfigs)
-    {
-        // List of possible tiles to be chosen from.
-        // There will be **intentionally** duplicates in here.
-        // Example: A probability of 0.95 will result in 95 duplicated objects
-        // being added (this number will be adjusted based on 
-        // the maximum probability).
-        var possibleTiles = new List<(int, Vector2I)>();
-        var probabilityMap = new System.Collections.Generic.Dictionary<(int, Vector2I), float>();
-
-        // Calculate the relative probability.
-        // In an ideal case this will be 1.0 (100%).
-        // However, if we have a tile that has 1.0 (100%) set and another 
-        // one that has 0.5 (50%) set, the total maximum relative 
-        // probability will be 1.5 (150%), instead of 1.0 (100%).
-        var relativeMaximumProbability = 0f;
-        foreach (var tileConfig in tileConfigs)
-        {
-            var probability = FindProbabilityOfTile(tileConfig);
-            relativeMaximumProbability += probability;
-            probabilityMap.Add((tileConfig.Atlas, tileConfig.Coordinate), probability);
-        }
-
-        // For each tile that can be placed here, calculate the adjusted
-        // probability based on taking the set probability and dividing it
-        // by the relative maximum probability.
-        // The resulting value will be a float from 0.0f to 1.0f, adjusted
-        // to any total percentages beyond 100% (1.0f).
-        //
-        // Take that adjusted probability, multiply it by 100 and cast
-        // to an int. This will result in a number between 0i and 100i. 
-        // Add the tile configuration that many times to the list.
-        foreach (var tileConfig in tileConfigs)
-        {
-            var probability = probabilityMap[(tileConfig.Atlas, tileConfig.Coordinate)];
-            var adjustedProbability = probability / relativeMaximumProbability;
-            var objectCountToAdd = (int)(adjustedProbability * 100);
-            var localTile = (tileConfig.Atlas, tileConfig.Coordinate);
-
-            for (var i = 0; i < objectCountToAdd; i++)
-                possibleTiles.Add(localTile);
-        }
-
-        return possibleTiles;
-    }
-
-    private void MakeBackgroundLayerFromGenerator(GridGenerator generator)
-    {
-        var possibleTiles = CompileProbabilityList(FloorTiles);
-
-        for (uint x = 0; x < generator.SizeX; x++)
-            for (uint y = 0; y < generator.SizeY; y++)
+        for (int x = 0; x < gridGenerator.SizeX; x++)
+            for (int y = 0; y < gridGenerator.SizeY; y++)
             {
-                var pickedCell = possibleTiles[Random.Shared.Next(0, possibleTiles.Count() - 1)];
-                tileMap.SetCell(
-                    layerBackground,
-                    new Vector2I((int)x, (int)y),
-                    pickedCell.Item1,
-                    pickedCell.Item2
-                );
+                // Any wall that is surrounded cardinally by more than three 
+                // walls will be skipped.
+                var wallCount = gridGenerator.CountNeighboursOfType((x, y), isFloor: false, countNull: true, interCardinalsToo: false);
+                if (wallCount > 3) continue;
+
+                // Pick a (randomized!) floor or wall tile from the pool,
+                // based on if the cell in the generator is a floor or not. 
+                var cell = gridGenerator.GetCell((x, y));
+                int pickedTile = PickTile(cell.IsFloor);
+
+                for (var a = 0; a < cellSizeOffset.X; a++)
+                    for (var b = 0; b < cellSizeOffset.Y; b++)
+                        // Set the chosen tile!
+                        gridMap.SetCellItem(
+                            new Vector3I(
+                                x * cellSizeOffset.X + a,
+                                0,
+                                y * cellSizeOffset.Y + b
+                            ),
+                            pickedTile
+                        );
             }
     }
 
-    private void MakeWallLayerFromGenerator(GridGenerator generator)
+    public void FixCorners()
     {
-        var possibleTiles = CompileProbabilityList(WallTiles);
-
-        for (uint x = 0; x < generator.SizeX; x++)
-            for (uint y = 0; y < generator.SizeY; y++)
+        for (int x = 0; x < gridGenerator.SizeX; x++)
+            for (int y = 0; y < gridGenerator.SizeY; y++)
             {
-                var cell = generator.GetCell((x, y));
+                // Skip if the current cell is a floor
+                var cell = gridGenerator.GetCell((x, y));
                 if (cell.IsFloor) continue;
 
-                var pickedCell = possibleTiles[Random.Shared.Next(0, possibleTiles.Count() - 1)];
-                tileMap.SetCell(
-                    layerBackground,
-                    new Vector2I((int)x, (int)y),
-                    pickedCell.Item1,
-                    pickedCell.Item2
-                );
+                // Count cardinal walls and skip any cells that aren't
+                // surrounded by walls. Visually We want:
+                // ?  W  ?
+                // W [X] W
+                // ?  W  ?
+                // ---
+                //  ? = Unknown
+                //  W = Wall
+                // [X] = Cell in question
+                var wallCount = gridGenerator.CountNeighboursOfType((x, y), isFloor: false, countNull: true, interCardinalsToo: false);
+                if (wallCount != 4) continue;
+
+                var cellNE = gridGenerator.GetCell((x - 1, y + 1));
+                var cellNW = gridGenerator.GetCell((x - 1, y - 1));
+                var cellSE = gridGenerator.GetCell((x + 1, y + 1));
+                var cellSW = gridGenerator.GetCell((x + 1, y - 1));
+
+                // Now, that we only have walls surrounded by other walls,
+                // we can check the inter-cardinals. Visually:
+                // [X] W [X]
+                //  W  W  W
+                // [X] W [X]
+                // ---
+                //  ? = Unknown
+                //  W = Wall
+                // [X] = Cells in question
+                //
+                // If any of those inter-cardinal cells is is a floor,
+                // we can set the center cell as a wall to fill the corner.
+                // Note: By-default, by the floor placing algorithm, 
+                // any walls that have more than three walls surrounding them
+                // will be excluded. This removes corner walls which we are
+                // trying to restore here for better looks.
+                if ((cellNE?.IsFloor ?? false) ||
+                    (cellSE?.IsFloor ?? false) ||
+                    (cellSW?.IsFloor ?? false) ||
+                    (cellNW?.IsFloor ?? false))
+                {
+                    int pickedTile = PickTile(isFloor: false);
+
+                    for (var a = 0; a < cellSizeOffset.X; a++)
+                        for (var b = 0; b < cellSizeOffset.Y; b++)
+                            // Set the chosen tile!
+                            gridMap.SetCellItem(
+                                new Vector3I(
+                                    x * cellSizeOffset.X + a,
+                                    0,
+                                    y * cellSizeOffset.Y + b
+                                ),
+                                pickedTile
+                            );
+                }
             }
     }
 }

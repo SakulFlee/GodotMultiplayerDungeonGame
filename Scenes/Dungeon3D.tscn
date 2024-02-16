@@ -73,3 +73,7 @@ light_energy = 0.001
 light_indirect_energy = 0.0
 light_volumetric_fog_energy = 0.0
 sky_mode = 1
+
+[node name="DirectionalLight3D-DEV" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 5, 0)
+sky_mode = 1

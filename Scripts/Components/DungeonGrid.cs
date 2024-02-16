@@ -106,10 +106,10 @@ public partial class DungeonGrid : Node3D
                 var cellE = gridGenerator.GetCell((x + 1, y));
 
                 var wallNeighbourCount =
-                      (!cellN?.IsFloor ?? false ? 1 : 0)
-                    + (!cellS?.IsFloor ?? false ? 1 : 0)
-                    + (!cellW?.IsFloor ?? false ? 1 : 0)
-                    + (!cellE?.IsFloor ?? false ? 1 : 0);
+                      (!cellN?.IsFloor ?? true ? 1 : 0)
+                    + (!cellS?.IsFloor ?? true ? 1 : 0)
+                    + (!cellW?.IsFloor ?? true ? 1 : 0)
+                    + (!cellE?.IsFloor ?? true ? 1 : 0);
 
                 // --- Walls ---
                 if (wallNeighbourCount == 3)
@@ -151,10 +151,10 @@ public partial class DungeonGrid : Node3D
                     //    W
                     // W [W] W
                     //    F
-                    else if ((!cellN?.IsFloor ?? false) &&
+                    else if ((!cellN?.IsFloor ?? true) &&
                          (cellS?.IsFloor ?? false) &&
-                         (!cellW?.IsFloor ?? false) &&
-                         (!cellE?.IsFloor ?? false))
+                         (!cellW?.IsFloor ?? true) &&
+                         (!cellE?.IsFloor ?? true))
                     {
                         var pickedCell = meshIdAssignment.Pick(meshIdAssignment.wall);
                         gridMap.SetCellItem(

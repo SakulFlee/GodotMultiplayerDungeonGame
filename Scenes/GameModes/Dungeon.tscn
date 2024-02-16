@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://d00vx5a6utcsu"]
 
 [ext_resource type="Script" path="res://Scripts/Components/DungeonGrid.cs" id="1_02r2w"]
-[ext_resource type="MeshLibrary" uid="uid://cckyw6vl4dknq" path="res://Cells/CellLibrary.tres" id="2_ywbdo"]
+[ext_resource type="MeshLibrary" uid="uid://cckyw6vl4dknq" path="res://Tiles/CellLibrary.tres" id="2_ywbdo"]
 [ext_resource type="PackedScene" uid="uid://da6bmqp6hwakk" path="res://Scenes/Entities/Player.tscn" id="3_h4y0j"]
 
 [sub_resource type="Environment" id="Environment_7i1n2"]
@@ -26,8 +26,8 @@ environment = SubResource("Environment_7i1n2")
 [node name="DungeonGrid" type="Node3D" parent="."]
 script = ExtResource("1_02r2w")
 meshLibrary = ExtResource("2_ywbdo")
-floorTiles = [null]
-wallTiles = [1]
+floorTiles = [1, 2]
+wallTiles = [0]
 printGeneratorResultToConsole = true
 metadata/_edit_lock_ = true
 

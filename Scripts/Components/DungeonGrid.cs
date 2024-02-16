@@ -54,9 +54,10 @@ public partial class DungeonGrid : Node3D
         gridGenerator.Automate(printFinalResultToConsole: printGeneratorResultToConsole);
 
         PlaceGeneratorOutput();
+        FixCorners();
     }
 
-    public int PickTile(bool floorCell) => floorCell
+    public int PickTile(bool isFloor) => isFloor
         ? floorTiles[Random.Shared.Next(floorTiles.Count() - 1)]
         : wallTiles[Random.Shared.Next(wallTiles.Count() - 1)];
 
@@ -86,6 +87,70 @@ public partial class DungeonGrid : Node3D
                             ),
                             pickedTile
                         );
+            }
+    }
+
+    public void FixCorners()
+    {
+        for (int x = 0; x < gridGenerator.SizeX; x++)
+            for (int y = 0; y < gridGenerator.SizeY; y++)
+            {
+                // Skip if the current cell is a floor
+                var cell = gridGenerator.GetCell((x, y));
+                if (cell.IsFloor) continue;
+
+                // Count cardinal walls and skip any cells that aren't
+                // surrounded by walls. Visually We want:
+                // ?  W  ?
+                // W [X] W
+                // ?  W  ?
+                // ---
+                //  ? = Unknown
+                //  W = Wall
+                // [X] = Cell in question
+                var wallCount = gridGenerator.CountNeighboursOfType((x, y), isFloor: false, countNull: true, interCardinalsToo: false);
+                if (wallCount != 4) continue;
+
+                var cellNE = gridGenerator.GetCell((x - 1, y + 1));
+                var cellNW = gridGenerator.GetCell((x - 1, y - 1));
+                var cellSE = gridGenerator.GetCell((x + 1, y + 1));
+                var cellSW = gridGenerator.GetCell((x + 1, y - 1));
+
+                // Now, that we only have walls surrounded by other walls,
+                // we can check the inter-cardinals. Visually:
+                // [X] W [X]
+                //  W  W  W
+                // [X] W [X]
+                // ---
+                //  ? = Unknown
+                //  W = Wall
+                // [X] = Cells in question
+                //
+                // If any of those inter-cardinal cells is is a floor,
+                // we can set the center cell as a wall to fill the corner.
+                // Note: By-default, by the floor placing algorithm, 
+                // any walls that have more than three walls surrounding them
+                // will be excluded. This removes corner walls which we are
+                // trying to restore here for better looks.
+                if ((cellNE?.IsFloor ?? false) ||
+                    (cellSE?.IsFloor ?? false) ||
+                    (cellSW?.IsFloor ?? false) ||
+                    (cellNW?.IsFloor ?? false))
+                {
+                    int pickedTile = PickTile(isFloor: false);
+
+                    for (var a = 0; a < cellSizeOffset.X; a++)
+                        for (var b = 0; b < cellSizeOffset.Y; b++)
+                            // Set the chosen tile!
+                            gridMap.SetCellItem(
+                                new Vector3I(
+                                    x * cellSizeOffset.X + a,
+                                    0,
+                                    y * cellSizeOffset.Y + b
+                                ),
+                                pickedTile
+                            );
+                }
             }
     }
 }

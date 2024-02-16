@@ -53,14 +53,14 @@ public partial class DungeonGrid : Node3D
         gridGenerator = new GridGenerator(((uint)dungeonSize.X, (uint)dungeonSize.Y), seed: seed);
         gridGenerator.Automate(printFinalResultToConsole: printGeneratorResultToConsole);
 
-        CovertAndPlaceGeneratorOutputToGodot();
+        PlaceGeneratorOutput();
     }
 
     public int PickTile(bool floorCell) => floorCell
         ? floorTiles[Random.Shared.Next(floorTiles.Count() - 1)]
         : wallTiles[Random.Shared.Next(wallTiles.Count() - 1)];
 
-    public void CovertAndPlaceGeneratorOutputToGodot()
+    public void PlaceGeneratorOutput()
     {
         for (int x = 0; x < gridGenerator.SizeX; x++)
             for (int y = 0; y < gridGenerator.SizeY; y++)

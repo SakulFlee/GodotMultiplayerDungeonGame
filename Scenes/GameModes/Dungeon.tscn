@@ -1,0 +1,44 @@
+[gd_scene load_steps=5 format=3 uid="uid://d00vx5a6utcsu"]
+
+[ext_resource type="Script" path="res://Scripts/Components/DungeonGrid.cs" id="1_02r2w"]
+[ext_resource type="MeshLibrary" uid="uid://cckyw6vl4dknq" path="res://Cells/CellLibrary.tres" id="2_ywbdo"]
+[ext_resource type="PackedScene" uid="uid://da6bmqp6hwakk" path="res://Scenes/Entities/Player.tscn" id="3_h4y0j"]
+
+[sub_resource type="Environment" id="Environment_7i1n2"]
+background_mode = 1
+background_energy_multiplier = 0.0
+ambient_light_source = 1
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 6.06
+reflected_light_source = 1
+tonemap_mode = 1
+ssr_enabled = true
+ssao_enabled = true
+ssil_enabled = true
+sdfgi_enabled = true
+
+[node name="Dungeon" type="Node3D"]
+metadata/_edit_lock_ = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_7i1n2")
+
+[node name="DungeonGrid" type="Node3D" parent="."]
+script = ExtResource("1_02r2w")
+meshLibrary = ExtResource("2_ywbdo")
+floorTiles = [null]
+wallTiles = [1]
+printGeneratorResultToConsole = true
+metadata/_edit_lock_ = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 5, 0)
+light_color = Color(1, 0.392157, 0, 1)
+light_energy = 0.001
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+sky_mode = 1
+metadata/_edit_lock_ = true
+
+[node name="Player" parent="." instance=ExtResource("3_h4y0j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, 35)

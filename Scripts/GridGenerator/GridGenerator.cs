@@ -2,9 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Godot;
 
 public class GridGenerator
 {
@@ -380,6 +377,8 @@ public class GridGenerator
         if (position.Item1 < 0 || position.Item2 < 0 || position.Item1 >= grid.GetUpperBound(0) || position.Item2 >= grid.GetUpperBound(1)) return null;
         else return grid[position.Item1, position.Item2];
     }
+
+    public uint CountNeighboursOfType((int, int) position, bool isFloor, bool countNull = true, bool interCardinalsToo = true) => CountNeighboursOfType(((uint)position.Item1, (uint)position.Item2), isFloor, countNull, interCardinalsToo);
 
     public uint CountNeighboursOfType((uint, uint) position, bool isFloor, bool countNull = true, bool interCardinalsToo = true)
     {

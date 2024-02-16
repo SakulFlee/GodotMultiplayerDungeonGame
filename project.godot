@@ -22,7 +22,7 @@ resources_spreadsheet_view/context_menu_on_leftclick=false
 
 config/name="Multiplayer Dungeon Game"
 config/tags=PackedStringArray("game", "private")
-run/main_scene="res://Scenes/Main.tscn"
+run/main_scene="res://Scenes/GameModes/Main.tscn"
 config/features=PackedStringArray("4.2", "C#")
 
 [autoload]
@@ -46,9 +46,8 @@ enabled=PackedStringArray("res://addons/DestructiblesCSharp/plugin.cfg", "res://
 [file_customization]
 
 folder_colors={
-"res://Models/Cells/Base/": "red",
-"res://Models/Cells/Stone/": "gray",
-"res://Models/Cells/Void/": "gray"
+"res://Cells/Base/": "red",
+"res://Cells/Stone/": "gray"
 }
 
 [input]

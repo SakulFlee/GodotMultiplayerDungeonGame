@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://dpgdwoe6fahx1"]
+
+[ext_resource type="PackedScene" uid="uid://dmocur2g2lqiq" path="res://Cells/Base/FloorTile.blend" id="1_lnwil"]
+[ext_resource type="Texture2D" uid="uid://cd31d0uhgonle" path="res://Sprites/(0, 3).kra" id="2_86yf0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1gnwb"]
+albedo_texture = ExtResource("2_86yf0")
+texture_filter = 4
+texture_repeat = false
+
+[node name="StoneFloorTile" instance=ExtResource("1_lnwil")]
+
+[node name="Floor" parent="." index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_1gnwb")

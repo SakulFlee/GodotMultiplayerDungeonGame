@@ -1,7 +1,4 @@
-using Godot;
-using System;
-
-public partial class Player3D : Sprite3D
+public partial class Player3D : Node3D
 {
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()

@@ -1,0 +1,21 @@
+[gd_scene load_steps=6 format=3 uid="uid://cmttje6mp1e5q"]
+
+[ext_resource type="PackedScene" uid="uid://bwwmj3n5r4vbo" path="res://Cells/Base/WallTile.blend" id="1_4tr0d"]
+[ext_resource type="Texture2D" uid="uid://cyumceotgr766" path="res://Sprites/test_a.kra" id="2_gmups"]
+[ext_resource type="Texture2D" uid="uid://cwoqxdscnbbyn" path="res://Sprites/test_b.kra" id="3_h8mbq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_24em7"]
+albedo_texture = ExtResource("2_gmups")
+texture_filter = 4
+texture_repeat = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_abmnk"]
+albedo_texture = ExtResource("3_h8mbq")
+texture_filter = 4
+texture_repeat = false
+
+[node name="StoneWallTile" instance=ExtResource("1_4tr0d")]
+
+[node name="Wall" parent="." index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_24em7")
+surface_material_override/1 = SubResource("StandardMaterial3D_abmnk")

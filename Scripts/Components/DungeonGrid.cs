@@ -58,11 +58,18 @@ public partial class DungeonGrid : Node3D
     }
 
     public int PickTile(bool isFloor) => isFloor
-        ? floorTiles[Random.Shared.Next(floorTiles.Count() - 1)]
-        : wallTiles[Random.Shared.Next(wallTiles.Count() - 1)];
+        ? floorTiles[Random.Shared.Next(0, floorTiles.Count())]
+        : wallTiles[Random.Shared.Next(0, wallTiles.Count())];
 
     public void PlaceGeneratorOutput()
     {
+        var d = new Dictionary
+        {
+            { 0, 0 },
+            { 1, 0 },
+            { 2, 0 }
+        };
+
         for (int x = 0; x < gridGenerator.SizeX; x++)
             for (int y = 0; y < gridGenerator.SizeY; y++)
             {
@@ -76,6 +83,8 @@ public partial class DungeonGrid : Node3D
                 var cell = gridGenerator.GetCell((x, y));
                 int pickedTile = PickTile(cell.IsFloor);
 
+                d[pickedTile] = d[pickedTile].AsInt32() + 1;
+
                 for (var a = 0; a < cellSizeOffset.X; a++)
                     for (var b = 0; b < cellSizeOffset.Y; b++)
                         // Set the chosen tile!
@@ -88,6 +97,11 @@ public partial class DungeonGrid : Node3D
                             pickedTile
                         );
             }
+
+        foreach ((var key, var value) in d)
+        {
+            GD.Print($"#{key} => {value}");
+        }
     }
 
     public void FixCorners()

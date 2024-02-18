@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://qt62snxthx8j"
-path="res://.godot/imported/stone_wall_edge_connect_right.kra-269df1033478560a6bd7747dca95e4d6.ctex"
+uid="uid://dxrfl5jc1jtg7"
+path="res://.godot/imported/run.png-3a3ca4720b3642bdb2b6103c71a9af17.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/stone_wall_edge_connect_right.kra"
-dest_files=["res://.godot/imported/stone_wall_edge_connect_right.kra-269df1033478560a6bd7747dca95e4d6.ctex"]
+source_file="res://Sprites/Base Character - Free/run.png"
+dest_files=["res://.godot/imported/run.png-3a3ca4720b3642bdb2b6103c71a9af17.ctex"]
 
 [params]
 

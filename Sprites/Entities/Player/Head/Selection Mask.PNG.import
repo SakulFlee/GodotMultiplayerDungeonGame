@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3ivuyvtclmp5"
-path="res://.godot/imported/stone_wall_edge_connect_left_front.kra-2e4fef790ea3365ee26abad206b5c583.ctex"
+uid="uid://dcwxo718k466e"
+path="res://.godot/imported/Selection Mask.PNG-78a51fd051b5c710e50a88675602f139.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/stone_wall_edge_connect_left_front.kra"
-dest_files=["res://.godot/imported/stone_wall_edge_connect_left_front.kra-2e4fef790ea3365ee26abad206b5c583.ctex"]
+source_file="res://Sprites/Entities/Player/Head/Selection Mask.PNG"
+dest_files=["res://.godot/imported/Selection Mask.PNG-78a51fd051b5c710e50a88675602f139.ctex"]
 
 [params]
 

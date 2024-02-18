@@ -1,18 +1,24 @@
 [gd_scene load_steps=2 format=3 uid="uid://d3q63a6k7lcms"]
 
-[ext_resource type="Texture2D" uid="uid://d2gvwvh8ifjqa" path="res://icon.svg" id="1_ff68t"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_jyino"]
+size = Vector3(0.5, 0.5, 0.5)
 
-[node name="Entity" type="Sprite3D"]
+[node name="Entity" type="CharacterBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("BoxShape3D_jyino")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 pixel_size = 0.0035
 billboard = 1
 shaded = true
 texture_filter = 5
 render_priority = 2
-texture = ExtResource("1_ff68t")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 light_color = Color(0.933333, 0.588235, 0.443137, 1)
 light_energy = 0.75
 light_indirect_energy = 0.0

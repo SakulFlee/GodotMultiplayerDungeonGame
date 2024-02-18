@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://brxy3uvc2k0ap"
-path="res://.godot/imported/_test_a.kra-0c1b7a8209bf40d283d22d21fba559c4.ctex"
+uid="uid://dwsg0xm51c0xr"
+path="res://.godot/imported/Character.kra-f67baa4392b15f99ec945fa1179a65a5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/_test_a.kra"
-dest_files=["res://.godot/imported/_test_a.kra-0c1b7a8209bf40d283d22d21fba559c4.ctex"]
+source_file="res://Sprites/Entities/Player/Character.kra"
+dest_files=["res://.godot/imported/Character.kra-f67baa4392b15f99ec945fa1179a65a5.ctex"]
 
 [params]
 

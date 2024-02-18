@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c74pyc2l5q6bu"
-path="res://.godot/imported/stone_wall_edge_connect_right_front.kra-64d77875aaa1005176bd34460ce1af24.ctex"
+uid="uid://dnink8l4nqu2s"
+path="res://.godot/imported/Head.png-c54c732753fb4d1fac24f589f8fd7a0c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/stone_wall_edge_connect_right_front.kra"
-dest_files=["res://.godot/imported/stone_wall_edge_connect_right_front.kra-64d77875aaa1005176bd34460ce1af24.ctex"]
+source_file="res://Sprites/Entities/Player/Head.png"
+dest_files=["res://.godot/imported/Head.png-c54c732753fb4d1fac24f589f8fd7a0c.ctex"]
 
 [params]
 

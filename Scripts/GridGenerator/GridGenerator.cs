@@ -356,15 +356,11 @@ public class GridGenerator
         return output;
     }
 
-    public List<(uint, uint)> FindCellOfType(bool isFloor)
-    {
-        return FindCell((x, y, cell) => cell.IsFloor == isFloor);
-    }
+    public List<(uint, uint)> FindCellOfType(bool isFloor) => FindCell((x, y, cell) => cell.IsFloor == isFloor);
 
-    public List<(uint, uint)> FindCellOfArea(uint area)
-    {
-        return FindCell((x, y, cell) => cell.Area == area);
-    }
+    public List<(uint, uint)> FindCellOfArea(uint area) => FindCell((x, y, cell) => cell.IsFloor && cell.Area == area);
+
+    public List<(uint, uint)> FindCellOfRoom(uint room) => FindCell((x, y, cell) => cell.IsFloor && cell.Room == room);
 
     public GridCell? GetCell((int, int) position) => GetCell(Grid, ((uint)position.Item1, (uint)position.Item2));
 

@@ -4,29 +4,12 @@
 [ext_resource type="PackedScene" uid="uid://b45p4okt83mw0" path="res://Scenes/UI/DungeonUI.tscn" id="1_du1sn"]
 [ext_resource type="MeshLibrary" uid="uid://cckyw6vl4dknq" path="res://Tiles/CellLibrary.tres" id="2_ywbdo"]
 [ext_resource type="PackedScene" uid="uid://da6bmqp6hwakk" path="res://Scenes/Entities/Player.tscn" id="3_h4y0j"]
-
-[sub_resource type="Environment" id="Environment_7i1n2"]
-background_mode = 1
-background_energy_multiplier = 0.0
-ambient_light_source = 1
-ambient_light_sky_contribution = 0.0
-ambient_light_energy = 6.06
-reflected_light_source = 1
-tonemap_mode = 1
-ssr_enabled = true
-ssao_enabled = true
-ssil_enabled = true
-sdfgi_enabled = true
+[ext_resource type="Environment" uid="uid://c8qgofxugcik8" path="res://Resources/WorldEnv/OverviewCameraEnv.tres" id="4_03rxr"]
 
 [node name="Dungeon" type="Node3D"]
 metadata/_edit_lock_ = true
 
-[node name="World" type="Node3D" parent="."]
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="World"]
-environment = SubResource("Environment_7i1n2")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="World"]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 5, 0)
 light_color = Color(1, 0.392157, 0, 1)
 light_energy = 0.001
@@ -48,6 +31,41 @@ size_flags_vertical = 3
 [node name="DungeonUI" parent="UI" instance=ExtResource("1_du1sn")]
 layout_mode = 1
 
+[node name="MarginContainer" type="MarginContainer" parent="UI"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_bottom = 240.0
+grow_horizontal = 0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="UI/MarginContainer"]
+custom_minimum_size = Vector2(240, 120)
+layout_mode = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="UI/MarginContainer/SubViewportContainer"]
+handle_input_locally = false
+gui_disable_input = true
+gui_snap_controls_to_pixels = false
+size = Vector2i(328, 208)
+size_2d_override = Vector2i(240, 120)
+size_2d_override_stretch = true
+render_target_update_mode = 4
+
+[node name="OverviewCamera" type="Camera3D" parent="UI/MarginContainer/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 225, 5, 142)
+keep_aspect = 0
+environment = ExtResource("4_03rxr")
+projection = 1
+current = true
+size = 450.0
+
 [node name="Game" type="Node3D" parent="."]
 
 [node name="DungeonGrid" type="Node3D" parent="Game"]
@@ -61,5 +79,5 @@ metadata/_edit_lock_ = true
 
 [node name="Player" parent="Game" instance=ExtResource("3_h4y0j")]
 
-[connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="Game/Player" method="onDungeonGridFinished"]
 [connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="UI/DungeonUI" method="onDungeonGridFinished"]
+[connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="Game/Player" method="onDungeonGridFinished"]

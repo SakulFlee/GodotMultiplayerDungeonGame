@@ -1,10 +1,11 @@
-[gd_scene load_steps=71 format=3 uid="uid://da6bmqp6hwakk"]
+[gd_scene load_steps=72 format=3 uid="uid://da6bmqp6hwakk"]
 
 [ext_resource type="Script" path="res://Scripts/Entities/Player.cs" id="1_gklqo"]
 [ext_resource type="PackedScene" uid="uid://d3q63a6k7lcms" path="res://Scenes/Entities/Entity.tscn" id="2_uymhy"]
 [ext_resource type="Texture2D" uid="uid://gmdtowo1gblr" path="res://Sprites/Base Character - Free/damage.png" id="3_0vxrn"]
 [ext_resource type="Texture2D" uid="uid://cqexjc4p5pbit" path="res://Sprites/Base Character - Free/idle.png" id="4_cnaik"]
 [ext_resource type="Texture2D" uid="uid://sv45s6tshdqk" path="res://Sprites/Base Character - Free/walk.png" id="5_nm6y1"]
+[ext_resource type="Environment" uid="uid://cnk137gdelgt4" path="res://Resources/WorldEnv/MainCameraEnv.tres" id="6_qlwru"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_s86g0"]
 atlas = ExtResource("3_0vxrn")
@@ -540,7 +541,8 @@ transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 
 [node name="SpringArm3D" type="SpringArm3D" parent="CameraOrigin" index="0"]
 spring_length = 3.5
 
-[node name="Camera3D" type="Camera3D" parent="CameraOrigin/SpringArm3D" index="0"]
+[node name="MainCamera" type="Camera3D" parent="CameraOrigin/SpringArm3D" index="0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.5)
+environment = ExtResource("6_qlwru")
 current = true
 fov = 90.0

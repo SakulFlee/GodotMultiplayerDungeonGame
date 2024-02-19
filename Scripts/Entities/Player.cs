@@ -97,7 +97,7 @@ public partial class Player : CharacterBody3D
 		}
 	}
 
-	private void onDungeonGridFinished()
+	private void onDungeonGridFinished(int _)
 	{
 		placePlayerInRoom();
 	}

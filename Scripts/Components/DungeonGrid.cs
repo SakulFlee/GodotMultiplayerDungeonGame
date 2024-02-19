@@ -33,7 +33,7 @@ public partial class DungeonGrid : Node3D
     public bool printGeneratorResultToConsole = false;
 
     [Signal]
-    public delegate void DungeonGridFinishedEventHandler();
+    public delegate void DungeonGridFinishedEventHandler(int seed);
 
     public GridGenerator gridGenerator { get; private set; }
 
@@ -60,7 +60,7 @@ public partial class DungeonGrid : Node3D
         PlaceGeneratorOutput();
         FixCorners();
 
-        EmitSignal(SignalName.DungeonGridFinished);
+        EmitSignal(SignalName.DungeonGridFinished, seed);
     }
 
     public int PickTile(bool isFloor) => isFloor

@@ -9,18 +9,7 @@
 [node name="Dungeon" type="Node3D"]
 metadata/_edit_lock_ = true
 
-[node name="DungeonGrid" type="Node3D" parent="."]
-unique_name_in_owner = true
-script = ExtResource("1_02r2w")
-meshLibrary = ExtResource("2_ywbdo")
-floorTiles = [1, 2]
-wallTiles = [0]
-printGeneratorResultToConsole = true
-metadata/_edit_lock_ = true
-
-[node name="World" type="Node3D" parent="."]
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="World"]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 5, 0)
 light_color = Color(1, 0.392157, 0, 1)
 light_energy = 0.001
@@ -39,7 +28,11 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="DungeonUI" parent="UI" instance=ExtResource("1_du1sn")]
+layout_mode = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="UI"]
+layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -51,12 +44,12 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="MarginContainer"]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="UI/MarginContainer"]
 custom_minimum_size = Vector2(240, 120)
 layout_mode = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="MarginContainer/SubViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="UI/MarginContainer/SubViewportContainer"]
 handle_input_locally = false
 gui_disable_input = true
 gui_snap_controls_to_pixels = false
@@ -65,17 +58,13 @@ size_2d_override = Vector2i(240, 120)
 size_2d_override_stretch = true
 render_target_update_mode = 4
 
-[node name="OverviewCamera" type="Camera3D" parent="MarginContainer/SubViewportContainer/SubViewport"]
+[node name="OverviewCamera" type="Camera3D" parent="UI/MarginContainer/SubViewportContainer/SubViewport"]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 225, 5, 142)
 keep_aspect = 0
 environment = ExtResource("4_03rxr")
 projection = 1
 current = true
 size = 450.0
-
-[connection signal="DungeonGridFinished" from="DungeonGrid" to="Player" method="onDungeonGridFinished"]
-[node name="DungeonUI" parent="UI" instance=ExtResource("1_du1sn")]
-layout_mode = 1
 
 [node name="Game" type="Node3D" parent="."]
 
@@ -90,5 +79,5 @@ metadata/_edit_lock_ = true
 
 [node name="Player" parent="Game" instance=ExtResource("3_h4y0j")]
 
-[connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="Game/Player" method="onDungeonGridFinished"]
 [connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="UI/DungeonUI" method="onDungeonGridFinished"]
+[connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="Game/Player" method="onDungeonGridFinished"]

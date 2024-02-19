@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3 uid="uid://b45p4okt83mw0"]
+
+[ext_resource type="Script" path="res://Scripts/UI/DungeonUI.cs" id="1_pr07f"]
+
+[sub_resource type="SystemFont" id="SystemFont_51wkd"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_elxc1"]
+font = SubResource("SystemFont_51wkd")
+font_size = 24
+
+[node name="DungeonUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pr07f")
+
+[node name="SeedLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Seed: awaiting signal ..."
+label_settings = SubResource("LabelSettings_elxc1")
+horizontal_alignment = 2
+vertical_alignment = 2

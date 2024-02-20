@@ -11,11 +11,14 @@ public class GridGenerator
 
     public Random R;
     public GridCell[,] Grid { get; private set; }
+
     public int SizeX { get => Grid.GetUpperBound(0); }
     public int SizeY { get => Grid.GetUpperBound(1); }
 
     public uint AreaCount { get; private set; } = 0;
     public uint RoomCount { get; private set; } = 0;
+
+    public (uint, uint) PortalLocation { get; private set; } = (0, 0);
 
     public GridGenerator((uint, uint) gridSize, int seed = 12345, double floorPercentage = 0.60, bool printToConsole = false)
     {
@@ -41,9 +44,26 @@ public class GridGenerator
         PlaceRooms(printToConsole: printRoomToConsole);
         AssignAreas(printStepsToConsole: printAreasToConsole);
         FixInvalidAreas(printToConsole: printInvalidAreaFixToConsole);
+
+        PlacePortal();
         CheckForDoorways(printToConsole: printDoorwaysToConsole);
 
         if (printFinalResultToConsole) PrintToConsole();
+    }
+
+    public void PlacePortal()
+    {
+        var pool = new List<(uint, uint)>();
+        foreach (var roomCell in FindCell((x, y, cell) =>
+            cell.IsFloor &&
+            cell.HasRoomData() &&
+            (GetCell((x - 1, y))?.IsFloor ?? false) &&
+            (GetCell((x + 1, y))?.IsFloor ?? false) &&
+            (GetCell((x, y - 1))?.IsFloor ?? false) &&
+            (GetCell((x, y + 1))?.IsFloor ?? false)))
+            pool.Add(roomCell);
+
+        PortalLocation = pool[R.Next(pool.Count)];
     }
 
     public void CheckForDoorways(bool printToConsole = false)
@@ -444,7 +464,11 @@ public class GridGenerator
         for (var y = 0; y < SizeY; y++)
         {
             for (var x = 0; x < SizeX; x++)
-                output += Grid[x, y].GetCellString(y % 2 == 0);
+                output +=
+                    x == PortalLocation.Item1 &&
+                    y == PortalLocation.Item2
+                        ? "PP"
+                        : Grid[x, y].GetCellString(y % 2 == 0);
 
             output += "\n";
         }

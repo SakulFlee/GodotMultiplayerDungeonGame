@@ -105,30 +105,12 @@ public partial class Player : CharacterBody3D
 	private void placePlayerInRoom()
 	{
 		var dungeonGrid = GetNode<DungeonGrid>("%DungeonGrid");
+		var portalLocation = dungeonGrid.gridGenerator.PortalLocation;
 
-		while (true)
-		{
-			var chosenRoom = dungeonGrid.gridGenerator.R.Next(0, (int)dungeonGrid.gridGenerator.RoomCount);
-			var roomCells = dungeonGrid.gridGenerator.FindCellOfRoom((uint)chosenRoom);
-
-			// Check room cell count, if less or equal than zero -> repeat
-			var cellCount = roomCells.Count() - 1;
-			if (cellCount <= 0) continue;
-
-			var chosenCellId = dungeonGrid.gridGenerator.R.Next(0, cellCount);
-			var chosenCell = roomCells[chosenCellId];
-
-			Position = new Vector3(
-				chosenCell.Item1 * dungeonGrid.cellSizeOffset.X - 2,
+		Position = new Vector3(
+				portalLocation.Item1 * dungeonGrid.cellSizeOffset.X - 2,
 				0,
-				chosenCell.Item2 * dungeonGrid.cellSizeOffset.Y - 2
+				portalLocation.Item2 * dungeonGrid.cellSizeOffset.Y - 2
 			);
-
-			// Check for collision, if so: repeat
-			if (MoveAndSlide()) continue;
-
-			// End loop
-			return;
-		}
 	}
 }

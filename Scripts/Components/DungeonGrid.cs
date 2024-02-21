@@ -54,8 +54,18 @@ public partial class DungeonGrid : Node3D
         if (seed < 0) seed = Random.Shared.Next(int.MaxValue);
         GD.Print($"[DungeonGrid] Seed: {seed}");
 
-        gridGenerator = new GridGenerator(((uint)dungeonSize.X, (uint)dungeonSize.Y), seed: seed);
-        gridGenerator.Automate(printFinalResultToConsole: printGeneratorResultToConsole);
+        // Keep generating until a valid dungeon appears.
+        gridGenerator = new GridGenerator(seed: seed);
+        bool done;
+        do
+        {
+            // Since we aren't resetting our randomness (i.e. by 
+            // re-supplying it with a seed), this shouldn't break 
+            // seed uniqueness. Since every time this seed would be 
+            // picked, the same amount of repeats would need to happen
+            // here until the first "valid" dungeon appears.
+            done = gridGenerator.Automate(((uint)dungeonSize.X, (uint)dungeonSize.Y), printFinalResultToConsole: printGeneratorResultToConsole);
+        } while (!done);
 
         PlaceGeneratorOutput();
         FixCorners();
@@ -64,8 +74,8 @@ public partial class DungeonGrid : Node3D
     }
 
     public int PickTile(bool isFloor) => isFloor
-        ? floorTiles[Random.Shared.Next(0, floorTiles.Count())]
-        : wallTiles[Random.Shared.Next(0, wallTiles.Count())];
+        ? floorTiles[gridGenerator.R.Next(0, floorTiles.Count())]
+        : wallTiles[gridGenerator.R.Next(0, wallTiles.Count())];
 
     public void PlaceGeneratorOutput()
     {

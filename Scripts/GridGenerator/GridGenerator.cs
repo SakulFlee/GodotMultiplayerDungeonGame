@@ -9,8 +9,8 @@ public class GridGenerator
     public uint DesiredRoomCount = 25;  // Maybe: Max Size / 3 ?
     public uint SmallAreaThresholdCells = 9;
 
-    public Random R;
-    public GridCell[,] Grid { get; private set; }
+    public Random R = Random.Shared;
+    public GridCell[,] Grid { get; private set; } = new GridCell[0, 0];
 
     public int SizeX { get => Grid.GetUpperBound(0); }
     public int SizeY { get => Grid.GetUpperBound(1); }
@@ -19,11 +19,21 @@ public class GridGenerator
     public uint RoomCount { get; private set; } = 0;
 
     public (uint, uint) PortalLocation { get; private set; } = (0, 0);
+    public uint BossRoomId { get; private set; } = 0;
+    public List<GridConnection> gridConnections { get; private set; } = new();
 
-    public GridGenerator((uint, uint) gridSize, int seed = 12345, double floorPercentage = 0.60, bool printToConsole = false)
+    public GridGenerator(int seed = 12345)
+    {
+        InitializeRandomness(seed);
+    }
+
+    public void InitializeRandomness(int seed = 12345)
     {
         R = new Random(seed);
+    }
 
+    public void InitializeAutomataGrid((uint, uint) gridSize, double floorPercentage = 0.60, bool printToConsole = false)
+    {
         Grid = new GridCell[gridSize.Item1, gridSize.Item2];
         for (var x = 0; x < gridSize.Item1; x++)
             for (var y = 0; y < gridSize.Item2; y++)
@@ -33,37 +43,85 @@ public class GridGenerator
 
         if (printToConsole)
         {
-            GD.Print(">>> Randomized Grid:");
+            GD.Print(">>> Initialized Automata Grid:");
             PrintToConsole();
         }
     }
 
-    public void Automate(bool printAutomataStepsToConsole = false, bool printRoomToConsole = false, bool printAreasToConsole = false, bool printInvalidAreaFixToConsole = false, bool printDoorwaysToConsole = false, bool printFinalResultToConsole = false)
+    public bool Automate((uint, uint) gridSize, double floorPercentage = 0.60, bool printInitializedGridToConsole = false, bool printAutomataStepsToConsole = false, bool printRoomToConsole = false, bool printAreasToConsole = false, bool printInvalidAreaFixToConsole = false, bool printDoorwaysToConsole = false, bool printFinalResultToConsole = false)
     {
+        bool result;
+
+        // Automata steps
+        InitializeAutomataGrid(gridSize, floorPercentage, printToConsole: printInitializedGridToConsole);
         PerformAutomataRepetitive(printStepsToConsole: printAutomataStepsToConsole);
         PlaceRooms(printToConsole: printRoomToConsole);
+
+        // Find areas in grid
         AssignAreas(printStepsToConsole: printAreasToConsole);
         FixInvalidAreas(printToConsole: printInvalidAreaFixToConsole);
 
-        PlacePortal();
+        // Portal room (and location), boss room, doors, ...
         CheckForDoorways(printToConsole: printDoorwaysToConsole);
+        PlaceBossRoom();
+        PlacePortal();
+        result = PlaceDoors();
 
         if (printFinalResultToConsole) PrintToConsole();
+        return result;
     }
 
     public void PlacePortal()
     {
-        var pool = new List<(uint, uint)>();
-        foreach (var roomCell in FindCell((x, y, cell) =>
-            cell.IsFloor &&
-            cell.HasRoomData() &&
-            (GetCell((x - 1, y))?.IsFloor ?? false) &&
-            (GetCell((x + 1, y))?.IsFloor ?? false) &&
-            (GetCell((x, y - 1))?.IsFloor ?? false) &&
-            (GetCell((x, y + 1))?.IsFloor ?? false)))
-            pool.Add(roomCell);
+        do
+        {
+            var pool = new List<(uint, uint)>();
+            foreach (var roomCell in FindCell((x, y, cell) =>
+                cell.IsFloor &&
+                cell.HasRoomData() &&
+                (GetCell((x - 1, y))?.IsFloor ?? false) &&
+                (GetCell((x + 1, y))?.IsFloor ?? false) &&
+                (GetCell((x, y - 1))?.IsFloor ?? false) &&
+                (GetCell((x, y + 1))?.IsFloor ?? false)))
+                pool.Add(roomCell);
 
-        PortalLocation = pool[R.Next(pool.Count)];
+            PortalLocation = pool[R.Next(pool.Count)];
+        } while (GetCell(PortalLocation)!.Room != BossRoomId);
+    }
+
+    public void PlaceBossRoom()
+    {
+        BossRoomId = FindBiggestRoom();
+    }
+
+    public bool PlaceDoors()
+    {
+        var gridConnectionsResult = GridConnection.BuildFromGenerator(this);
+        if (gridConnectionsResult == null) return false;
+        else
+        {
+            gridConnections.Clear();
+            gridConnections.AddRange(gridConnectionsResult);
+        }
+
+        return true;
+    }
+
+    public uint FindBiggestRoom()
+    {
+        uint biggestRoomId = 0;
+        var biggestRoomCount = 0;
+        for (uint roomId = 1; roomId <= RoomCount; roomId++)
+        {
+            var roomCells = FindCell((x, y, cell) => cell.HasRoomData() && cell.Room == roomId);
+
+            if (roomCells.Count() > biggestRoomCount)
+            {
+                biggestRoomId = roomId;
+                biggestRoomCount = roomCells.Count();
+            }
+        }
+        return biggestRoomId;
     }
 
     public void CheckForDoorways(bool printToConsole = false)

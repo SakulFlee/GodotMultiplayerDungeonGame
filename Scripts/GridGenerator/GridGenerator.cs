@@ -73,14 +73,16 @@ public class GridGenerator
         if (printToConsole) PrintToConsole();
     }
 
-    public void FixInvalidAreas(bool fixGridEdges = true, bool redoAreas = true, bool printToConsole = false)
+    private void FixEdges()
     {
-        if (fixGridEdges)
-            for (var x = 0; x < SizeX; x++)
-                for (var y = 0; y < SizeY; y++)
-                    if (x == 0 || y == 0 || x == SizeX - 1 || y == SizeY - 1)
-                        Grid[x, y] = new GridCell(isFloor: false);
+        for (var x = 0; x < SizeX; x++)
+            for (var y = 0; y < SizeY; y++)
+                if (x == 0 || y == 0 || x == SizeX - 1 || y == SizeY - 1)
+                    Grid[x, y] = new GridCell(isFloor: false);
+    }
 
+    private void FixTooSmallOrInvalidPlacedAreas()
+    {
         for (uint area = 1; area <= AreaCount; area++)
         {
             uint minX = int.MaxValue;
@@ -121,16 +123,36 @@ public class GridGenerator
                 foreach (var (x, y) in cellsInArea)
                     Grid[x, y] = new GridCell(isFloor: false);
         }
+    }
+
+    private void FixRedoAreas()
+    {
+        AreaCount = 0;
+        for (var x = 0; x < SizeX; x++)
+            for (var y = 0; y < SizeY; y++)
+                Grid[x, y].Area = 0;
+
+        AssignAreas();
+    }
+
+    private void FixWalledRooms()
+    {
+        FindCell((x, y, cell) => !cell.IsFloor && cell.HasRoomData())
+            .ForEach(i => Grid[i.Item1, i.Item2].Room = 0);
+    }
+
+    public void FixInvalidAreas(bool fixGridEdges = true, bool redoAreas = true, bool fixWalledRooms = true, bool printToConsole = false)
+    {
+        if (fixGridEdges)
+            FixEdges();
+
+        FixTooSmallOrInvalidPlacedAreas();
 
         if (redoAreas)
-        {
-            AreaCount = 0;
-            for (var x = 0; x < SizeX; x++)
-                for (var y = 0; y < SizeY; y++)
-                    Grid[x, y].Area = 0;
+            FixRedoAreas();
 
-            AssignAreas();
-        }
+        if (fixWalledRooms)
+            FixWalledRooms();
 
         if (printToConsole) PrintToConsole();
     }

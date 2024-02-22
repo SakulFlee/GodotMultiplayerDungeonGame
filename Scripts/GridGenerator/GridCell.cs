@@ -5,7 +5,6 @@ public class GridCell
     public bool IsFloor { get; set; }
     public uint Area { get; set; } = 0;
     public uint Room { get; set; } = 0;
-    public bool CanBeDoor { get; set; } = false;
 
     public GridCell(bool isFloor)
     {
@@ -15,10 +14,7 @@ public class GridCell
     public string GetCellString(bool alt = false)
     {
         if (!IsFloor)
-            if (CanBeDoor)
-                return "▒▒";
-            else
-                return "██";
+            return "██";
 
         if (HasRoomData())
         {
@@ -38,5 +34,5 @@ public class GridCell
 
     public bool HasRoomData() => Room > 0;
 
-    public override string ToString() => $"GridCell [is Floor = {IsFloor}, Area = {Area}, can be Door = {CanBeDoor}]";
+    public override string ToString() => $"GridCell [is Floor = {IsFloor}, Area = {Area}, Room = {Room}]";
 }

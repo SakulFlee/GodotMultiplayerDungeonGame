@@ -13,7 +13,7 @@ public class GridConnection
 
     public bool isOnMainPath { get; private set; } = false;
 
-    public static List<GridConnection>? BuildFromGenerator(GridGenerator generator)
+    public static List<GridConnection>? BuildFromGenerator(GridGenerator generator, bool[,] doorwayGrid)
     {
         bool bossRoomFound = false;
 
@@ -22,20 +22,22 @@ public class GridConnection
         for (uint roomId = 1; roomId <= generator.RoomCount; roomId++)
         {
             dictionary.Add((roomId, false), new GridConnection(roomId, false));
-            foreach (var possibleConnection in CheckForConnections(generator, roomId))
-                if (possibleConnection.Item2)
-                    dictionary[(roomId, false)].roomConnections.Add(possibleConnection.Item1);
-                else
-                    dictionary[(roomId, false)].areaConnections.Add(possibleConnection.Item1);
+            foreach (var possibleConnection in CheckForConnections(generator, roomId, doorwayGrid))
+                if (possibleConnection.Item1 != roomId)
+                    if (possibleConnection.Item2)
+                        dictionary[(roomId, false)].roomConnections.Add(possibleConnection.Item1);
+                    else
+                        dictionary[(roomId, false)].areaConnections.Add(possibleConnection.Item1);
         }
         for (uint areaId = 1; areaId <= generator.AreaCount; areaId++)
         {
             dictionary.Add((areaId, true), new GridConnection(areaId, true));
-            foreach (var possibleConnection in CheckForConnections(generator, areaId))
-                if (possibleConnection.Item2)
-                    dictionary[(areaId, true)].areaConnections.Add(possibleConnection.Item1);
-                else
-                    dictionary[(areaId, true)].areaConnections.Add(possibleConnection.Item1);
+            foreach (var possibleConnection in CheckForConnections(generator, areaId, doorwayGrid))
+                if (possibleConnection.Item1 != areaId)
+                    if (possibleConnection.Item2)
+                        dictionary[(areaId, true)].areaConnections.Add(possibleConnection.Item1);
+                    else
+                        dictionary[(areaId, true)].areaConnections.Add(possibleConnection.Item1);
         }
 
         // Start queue at portal room
@@ -86,12 +88,12 @@ public class GridConnection
     /// </summary>
     /// <param name="generator"></param>
     /// <param name="roomId"></param>
-    public static HashSet<(uint, bool)> CheckForConnections(GridGenerator generator, uint roomId)
+    public static HashSet<(uint, bool)> CheckForConnections(GridGenerator generator, uint roomId, bool[,] doorwayGrid)
     {
         var result = new HashSet<(uint, bool)>();
 
         var possibleDoorCells = generator.FindCell((x, y, cell) =>
-            cell.CanBeDoor &&
+            doorwayGrid[x, y] &&
             (
                 (generator.GetCell((x - 1, y))?.Room == roomId) ||
                 (generator.GetCell((x + 1, y))?.Room == roomId) ||
@@ -165,6 +167,66 @@ public class GridConnection
             else continue;
 
             result.Add((id, isArea));
+        }
+
+        return result;
+    }
+
+    public static HashSet<(uint, uint)> FindConnectingCells(GridGenerator generator, bool[,] doorwayGrid, (uint, bool) from, (uint, bool) to)
+    {
+        var result = new HashSet<(uint, uint)>();
+
+        var cellsToCheck = new Queue<(uint, uint)>();
+        for (uint x = 0; x < generator.SizeX; x++)
+            for (uint y = 0; y < generator.SizeY; y++)
+                if (doorwayGrid[x, y])
+                    cellsToCheck.Enqueue((x, y));
+
+        while (cellsToCheck.Count() > 0)
+        {
+            var cellToCheck = cellsToCheck.Dequeue();
+
+            var cellN = generator.GetCell((
+                cellToCheck.Item1 - 1,
+                cellToCheck.Item2
+            ));
+            var cellS = generator.GetCell((
+                cellToCheck.Item1 + 1,
+                cellToCheck.Item2
+            ));
+            var cellW = generator.GetCell((
+                cellToCheck.Item1,
+                cellToCheck.Item2 - 1
+            ));
+            var cellE = generator.GetCell((
+                cellToCheck.Item1,
+                cellToCheck.Item2 + 1
+            ));
+
+            var foundFrom = from.Item2
+                ? // Looking for area
+                    cellN?.Area == from.Item1 ||
+                    cellS?.Area == from.Item1 ||
+                    cellE?.Area == from.Item1 ||
+                    cellW?.Area == from.Item1
+                : // Looking for room
+                    cellN?.Room == from.Item1 ||
+                    cellS?.Room == from.Item1 ||
+                    cellE?.Room == from.Item1 ||
+                    cellW?.Room == from.Item1;
+            var foundTo = to.Item2
+                ? // Looking for area
+                    cellN?.Area == to.Item1 ||
+                    cellS?.Area == to.Item1 ||
+                    cellE?.Area == to.Item1 ||
+                    cellW?.Area == to.Item1
+                : // Looking for room
+                    cellN?.Room == to.Item1 ||
+                    cellS?.Room == to.Item1 ||
+                    cellE?.Room == to.Item1 ||
+                    cellW?.Room == to.Item1;
+
+            if (foundFrom && foundTo) result.Add(cellToCheck);
         }
 
         return result;

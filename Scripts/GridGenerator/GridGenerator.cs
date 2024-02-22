@@ -62,10 +62,10 @@ public class GridGenerator
         FixInvalidAreas(printToConsole: printInvalidAreaFixToConsole);
 
         // Portal room (and location), boss room, doors, ...
-        CheckForDoorways(printToConsole: printDoorwaysToConsole);
+        var doorwayGrid = CheckForDoorways(printToConsole: printDoorwaysToConsole);
         PlaceBossRoom();
         PlacePortal();
-        result = PlaceDoors();
+        result = PlaceDoors(doorwayGrid);
 
         if (printFinalResultToConsole) PrintToConsole();
         return result;
@@ -94,14 +94,43 @@ public class GridGenerator
         BossRoomId = FindBiggestRoom();
     }
 
-    public bool PlaceDoors()
+    public bool PlaceDoors(bool[,] doorwayGrid)
     {
-        var gridConnectionsResult = GridConnection.BuildFromGenerator(this);
+        // Compute connections between rooms and areas.
+        // On failure (== no connection between main and boss room), 
+        // return false and end early.
+        var gridConnectionsResult = GridConnection.BuildFromGenerator(this, doorwayGrid);
         if (gridConnectionsResult == null) return false;
         else
         {
             gridConnections.Clear();
             gridConnections.AddRange(gridConnectionsResult);
+        }
+
+        // Put all connections that have been found in a queue for processing.
+        // Tuple: (From Room/Area ID, is from ID area?, To Room/Area ID, is to ID area?)
+        var connectionsToBeMade = new Queue<(uint, bool, uint, bool)>();
+        foreach (var gridConnection in gridConnections)
+        {
+            foreach (var roomConnection in gridConnection.roomConnections)
+                connectionsToBeMade.Enqueue((gridConnection.id, gridConnection.isArea, roomConnection, false));
+            foreach (var areaConnection in gridConnection.areaConnections)
+                connectionsToBeMade.Enqueue((gridConnection.id, gridConnection.isArea, areaConnection, false));
+        }
+
+        while (connectionsToBeMade.Count() > 0)
+        {
+            var connectionToBeMade = connectionsToBeMade.Dequeue();
+
+            // Find all "possible door cell" candidates that match the
+            // from and to ID (and area/room specification)
+            // TODO
+            var connectedTiles = GridConnection.FindConnectingCells(this, doorwayGrid, (connectionToBeMade.Item1, connectionToBeMade.Item2), (connectionToBeMade.Item3, connectionToBeMade.Item4));
+
+            GD.Print($"{connectionToBeMade.Item1} ({connectionToBeMade.Item2}) -> {connectionToBeMade.Item3} ({connectionToBeMade.Item4}): {connectedTiles.Count()}");
+
+            // Pick any of the candidates and mark it as a door
+            // TODO
         }
 
         return true;
@@ -124,8 +153,9 @@ public class GridGenerator
         return biggestRoomId;
     }
 
-    public void CheckForDoorways(bool printToConsole = false)
+    public bool[,] CheckForDoorways(bool printToConsole = false)
     {
+        var result = new bool[Grid.GetUpperBound(0), Grid.GetUpperBound(1)];
         for (uint x = 0; x < SizeX; x++)
             for (uint y = 0; y < SizeY; y++)
             {
@@ -137,7 +167,7 @@ public class GridGenerator
                 var cellE = GetCell((x, y + 1));
                 var cellW = GetCell((x, y - 1));
 
-                Grid[x, y].CanBeDoor = (cellN != null && cellN.IsFloor
+                result[x, y] = (cellN != null && cellN.IsFloor
                     && cellS != null && cellS.IsFloor
                     && cellE != null && !cellE.IsFloor
                     && cellW != null && !cellW.IsFloor)
@@ -149,6 +179,7 @@ public class GridGenerator
             }
 
         if (printToConsole) PrintToConsole();
+        return result;
     }
 
     public void FixInvalidAreas(bool fixGridEdges = true, bool redoAreas = true, bool printToConsole = false)

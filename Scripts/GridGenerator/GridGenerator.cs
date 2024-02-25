@@ -118,9 +118,6 @@ public class GridGenerator
         // Repetitively, perform cellular automata
         PerformAutomataRepetitive();
 
-        GD.Print("Before:");
-        PrintToConsole();
-
         // Place rooms
         var rooms = MakeRandomizedRoomQueue();
         PlaceRooms(rooms);
@@ -267,82 +264,6 @@ public class GridGenerator
         }
     }
 
-    // private void FixTooSmallOrInvalidPlacedAreas()
-    // {
-    //     for (uint area = 1; area <= maxArea; area++)
-    //     {
-    //         uint minX = int.MaxValue;
-    //         uint minY = int.MaxValue;
-    //         uint maxX = 0;
-    //         uint maxY = 0;
-
-    //         var cellsInArea = FindCellOfArea(area);
-    //         foreach (var (x, y) in cellsInArea)
-    //         {
-    //             if (x < minX)
-    //             {
-    //                 minX = x;
-    //             }
-    //             else if (y < minY)
-    //             {
-    //                 minY = y;
-    //             }
-    //             else if (x > maxX)
-    //             {
-    //                 maxX = x;
-    //             }
-    //             else if (y > maxY)
-    //             {
-    //                 maxY = y;
-    //             }
-    //         }
-
-    //         var removeArea = minX == int.MaxValue
-    //             || minY == int.MaxValue
-    //             || maxX == 0
-    //             || maxY == 0
-    //             || minX == maxX
-    //             || minY == maxY
-    //             || cellsInArea.Count() < smallAreaThresholdCells;
-
-    //         if (removeArea)
-    //             foreach (var (x, y) in cellsInArea)
-    //                 Grid[x, y] = new GridCell(isFloor: false);
-    //     }
-    // }
-
-    // private void FixRedoAreas()
-    // {
-    //     maxArea = 0;
-    //     for (var x = 0; x < GridSizeX; x++)
-    //         for (var y = 0; y < GridSizeY; y++)
-    //             Grid[x, y].Area = 0;
-
-    //     AssignAreas();
-    // }
-
-    // private void FixWalledRooms()
-    // {
-    //     FindCell((x, y, cell) => !cell.IsFloor && cell.HasRoomData())
-    //         .ForEach(i => Grid[i.Item1, i.Item2].Room = 0);
-    // }
-
-    // public void FixInvalidAreas(bool fixGridEdges = true, bool redoAreas = true, bool fixWalledRooms = true, bool printToConsole = false)
-    // {
-    //     if (fixGridEdges)
-    //         EnsureEdgesOfGridAreWalls();
-
-    //     FixTooSmallOrInvalidPlacedAreas();
-
-    //     if (redoAreas)
-    //         FixRedoAreas();
-
-    //     if (fixWalledRooms)
-    //         FixWalledRooms();
-
-    //     if (printToConsole) PrintToConsole();
-    // }
-
     /// <summary>
     /// Creates a queue of randomized rooms to be used in <see cref="PlaceRooms(Queue{IGridRoom})"/>
     /// </summary>
@@ -401,58 +322,13 @@ public class GridGenerator
             var room = roomQueue.Dequeue();
             floorGrid = room.Apply(floorGrid);
         }
-    }
-
-    // public void FixAreas()
-    // {
-    //     var floorsWithoutAreaList = FindCell((x, y, cell) => cell.IsFloor && cell.Area == 0);
-    //     var floorsWithoutArea = new Queue<(uint, uint)>(floorsWithoutAreaList.Count());
-    //     foreach (var a in floorsWithoutAreaList) floorsWithoutArea.Enqueue(a);
-
-    //     while (floorsWithoutArea.Count() > 0)
-    //     {
-    //         var cellPosition = floorsWithoutArea.Dequeue();
-
-    //         var cellN = GetCell((cellPosition.Item1 - 1, cellPosition.Item2));
-    //         if (cellN != null && cellN.Area > 0)
-    //         {
-    //             Grid[cellPosition.Item1, cellPosition.Item2].Area = cellN.Area;
-    //             continue;
-    //         }
-
-    //         var cellS = GetCell((cellPosition.Item1 + 1, cellPosition.Item2));
-    //         if (cellS != null && cellS.Area > 0)
-    //         {
-    //             Grid[cellPosition.Item1, cellPosition.Item2].Area = cellS.Area;
-    //             continue;
-    //         }
-
-    //         var cellE = GetCell((cellPosition.Item1, cellPosition.Item2 - 1));
-    //         if (cellE != null && cellE.Area > 0)
-    //         {
-    //             Grid[cellPosition.Item1, cellPosition.Item2].Area = cellE.Area;
-    //             continue;
-    //         }
-
-    //         var cellW = GetCell((cellPosition.Item1, cellPosition.Item2 + 1));
-    //         if (cellW != null && cellW.Area > 0)
-    //         {
-    //             Grid[cellPosition.Item1, cellPosition.Item2].Area = cellW.Area;
-    //             continue;
-    //         }
-
-    //         floorsWithoutArea.Enqueue(cellPosition);
-    //     }
-    // }
+    } 
 
     public void PerformAutomataRepetitive(int steps = 5)
     {
         for (var step = 0; step < steps; step++)
         {
             PerformAutomata();
-
-            // GD.Print($"> #{step}");
-            // PrintToConsole();
         }
     }
 

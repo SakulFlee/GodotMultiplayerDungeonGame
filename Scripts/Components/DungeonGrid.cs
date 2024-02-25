@@ -80,7 +80,6 @@ public partial class DungeonGrid : Node3D
             // picked, the same amount of repeats would need to happen
             // here until the first "valid" dungeon appears.
             done = gridGenerator.Automate(dungeonSize);
-            GD.Print($"Done: {done}");
         } while (!done);
 
         if (printGeneratorResultToConsole)

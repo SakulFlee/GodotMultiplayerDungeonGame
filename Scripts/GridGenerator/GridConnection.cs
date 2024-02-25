@@ -6,10 +6,7 @@ public class GridConnection
 {
     public uint id { get; private set; }
 
-    public bool isArea { get; private set; }
-
     public List<uint> areaConnections { get; private set; } = new();
-    public List<uint> roomConnections { get; private set; } = new();
 
     public bool isOnMainPath { get; private set; } = false;
 
@@ -17,58 +14,42 @@ public class GridConnection
     {
         bool bossRoomFound = false;
 
-        // Make a list of rooms and areas and find connections
-        var dictionary = new Dictionary<(uint, bool), GridConnection>();
-        for (uint roomId = 1; roomId <= generator.RoomCount; roomId++)
+        // Make a list of areas and find connections
+        var dictionary = new Dictionary<uint, GridConnection>();
+        for (uint areaId = 1; areaId <= generator.maxArea; areaId++)
         {
-            dictionary.Add((roomId, false), new GridConnection(roomId, false));
-            foreach (var possibleConnection in CheckForConnections(generator, roomId, doorwayGrid))
-                if (possibleConnection.Item1 != roomId)
-                    if (possibleConnection.Item2)
-                        dictionary[(roomId, false)].roomConnections.Add(possibleConnection.Item1);
-                    else
-                        dictionary[(roomId, false)].areaConnections.Add(possibleConnection.Item1);
-        }
-        for (uint areaId = 1; areaId <= generator.AreaCount; areaId++)
-        {
-            dictionary.Add((areaId, true), new GridConnection(areaId, true));
+            dictionary.Add(areaId, new GridConnection(areaId));
             foreach (var possibleConnection in CheckForConnections(generator, areaId, doorwayGrid))
-                if (possibleConnection.Item1 != areaId)
-                    if (possibleConnection.Item2)
-                        dictionary[(areaId, true)].areaConnections.Add(possibleConnection.Item1);
-                    else
-                        dictionary[(areaId, true)].areaConnections.Add(possibleConnection.Item1);
+                if (possibleConnection != areaId)
+                    dictionary[areaId].areaConnections.Add(possibleConnection);
         }
 
         // Start queue at portal room
-        var queue = new Queue<(uint, bool)>();
-        var portalRoom = generator.GetCell(generator.PortalLocation)!.Room;
-        queue.Enqueue((portalRoom, false));
+        var queue = new Queue<uint>();
+        var portalRoom = generator.areaGrid[
+            generator.portalLocation.X,
+            generator.portalLocation.Y
+        ];
+        queue.Enqueue(portalRoom);
 
         do
         {
             var currentEntry = queue.Dequeue();
-            var currentGraph = dictionary[(currentEntry.Item1, currentEntry.Item2)];
+            var currentGraph = dictionary[currentEntry];
 
             // Set as being on the main path
             currentGraph.isOnMainPath = true;
 
             // check for boss room
-            if (!currentGraph.isArea && currentGraph.id == generator.BossRoomId)
+            if (currentGraph.id == generator.bossAreaId)
                 bossRoomFound = true;
 
-            // add other non-main path rooms
-            foreach (var neighbourRoom in currentGraph.roomConnections)
-            {
-                var neighbourEntry = dictionary[(neighbourRoom, false)];
-                if (!neighbourEntry.isOnMainPath)
-                    queue.Enqueue((neighbourRoom, false));
-            }
+            // add other non-main path areas
             foreach (var neighbourArea in currentGraph.areaConnections)
             {
-                var neighbourEntry = dictionary[(neighbourArea, true)];
+                var neighbourEntry = dictionary[neighbourArea];
                 if (!neighbourEntry.isOnMainPath)
-                    queue.Enqueue((neighbourArea, true));
+                    queue.Enqueue(neighbourArea);
             }
         } while (queue.Count() > 0);
 
@@ -88,143 +69,87 @@ public class GridConnection
     /// </summary>
     /// <param name="generator"></param>
     /// <param name="roomId"></param>
-    public static HashSet<(uint, bool)> CheckForConnections(GridGenerator generator, uint roomId, bool[,] doorwayGrid)
+    public static HashSet<uint> CheckForConnections(
+        GridGenerator generator,
+        uint roomId,
+        bool[,] doorwayGrid)
     {
-        var result = new HashSet<(uint, bool)>();
+        var result = new HashSet<uint>();
 
-        var possibleDoorCells = generator.FindCell((x, y, cell) =>
-            doorwayGrid[x, y] &&
-            (
-                (generator.GetCell((x - 1, y))?.Room == roomId) ||
-                (generator.GetCell((x + 1, y))?.Room == roomId) ||
-                (generator.GetCell((x, y - 1))?.Room == roomId) ||
-                (generator.GetCell((x, y + 1))?.Room == roomId)
-            )
+        var possibleDoorCells = generator.FindCell((v, floor, area, door) =>
+            doorwayGrid[v.X, v.Y] &&
+            ((generator.GetAreaCell(v + new Vector2I(-1, 0)) == roomId) ||
+                (generator.GetAreaCell(v + new Vector2I(1, 0)) == roomId) ||
+                (generator.GetAreaCell(v + new Vector2I(0, -1)) == roomId) ||
+                (generator.GetAreaCell(v + new Vector2I(0, 1)) == roomId))
         );
 
         foreach (var possibleDoorCell in possibleDoorCells)
         {
-            var cellN = generator.GetCell((
-                possibleDoorCell.Item1 - 1,
-                possibleDoorCell.Item2
-            ));
-            var cellS = generator.GetCell((
-                possibleDoorCell.Item1 + 1,
-                possibleDoorCell.Item2
-            ));
-            var cellW = generator.GetCell((
-                possibleDoorCell.Item1,
-                possibleDoorCell.Item2 - 1
-            ));
-            var cellE = generator.GetCell((
-                possibleDoorCell.Item1,
-                possibleDoorCell.Item2 + 1
-            ));
+            var cellN = generator.GetAreaCell(possibleDoorCell + new Vector2I(-1, 0));
+            var cellS = generator.GetAreaCell(possibleDoorCell + new Vector2I(1, 0));
+            var cellW = generator.GetAreaCell(possibleDoorCell + new Vector2I(0, -1));
+            var cellE = generator.GetAreaCell(possibleDoorCell + new Vector2I(0, 1));
 
-            uint id;
-            bool isArea;
-
-            if (cellN?.HasRoomData() ?? false && cellN.Room != roomId)
+            uint? id;
+            if (cellN != null && cellN != roomId)
             {
-                id = cellN.Room;
-                isArea = false;
+                id = cellN;
             }
-            else if (cellS?.HasRoomData() ?? false && cellS.Room != roomId)
+            else if (cellS != null && cellS! != roomId)
             {
-                id = cellS.Room;
-                isArea = false;
+                id = cellS;
             }
-            else if (cellW?.HasRoomData() ?? false && cellW.Room != roomId)
+            else if (cellW != null && cellW! != roomId)
             {
-                id = cellW.Room;
-                isArea = false;
+                id = cellW;
             }
-            else if (cellE?.HasRoomData() ?? false && cellE.Room != roomId)
+            else if (cellE != null && cellE! != roomId)
             {
-                id = cellE.Room;
-                isArea = false;
-            }
-            else if (cellN?.HasAreaData() ?? false)
-            {
-                id = cellN.Area;
-                isArea = true;
-            }
-            else if (cellS?.HasAreaData() ?? false)
-            {
-                id = cellS.Area;
-                isArea = true;
-            }
-            else if (cellW?.HasAreaData() ?? false)
-            {
-                id = cellW.Area;
-                isArea = true;
-            }
-            else if (cellE?.HasAreaData() ?? false)
-            {
-                id = cellE.Area;
-                isArea = true;
+                id = cellE;
             }
             else continue;
 
-            result.Add((id, isArea));
+            var x = id ?? 0;
+            if (x == 0) continue;
+
+            result.Add(x);
         }
 
         return result;
     }
 
-    public static HashSet<(uint, uint)> FindConnectingCells(GridGenerator generator, bool[,] doorwayGrid, (uint, bool) from, (uint, bool) to)
+    public static HashSet<Vector2I> FindConnectingCells(
+        GridGenerator generator,
+        bool[,] doorwayGrid,
+        uint from,
+        uint to)
     {
-        var result = new HashSet<(uint, uint)>();
+        var result = new HashSet<Vector2I>();
 
-        var cellsToCheck = new Queue<(uint, uint)>();
-        for (uint x = 0; x < generator.SizeX; x++)
-            for (uint y = 0; y < generator.SizeY; y++)
+        var cellsToCheck = new Queue<Vector2I>();
+        for (var x = 0; x < generator.gridSize.X; x++)
+            for (var y = 0; y < generator.gridSize.Y; y++)
                 if (doorwayGrid[x, y])
-                    cellsToCheck.Enqueue((x, y));
+                    cellsToCheck.Enqueue(new Vector2I(x, y));
 
         while (cellsToCheck.Count() > 0)
         {
             var cellToCheck = cellsToCheck.Dequeue();
 
-            var cellN = generator.GetCell((
-                cellToCheck.Item1 - 1,
-                cellToCheck.Item2
-            ));
-            var cellS = generator.GetCell((
-                cellToCheck.Item1 + 1,
-                cellToCheck.Item2
-            ));
-            var cellW = generator.GetCell((
-                cellToCheck.Item1,
-                cellToCheck.Item2 - 1
-            ));
-            var cellE = generator.GetCell((
-                cellToCheck.Item1,
-                cellToCheck.Item2 + 1
-            ));
+            var cellN = generator.GetAreaCell(cellToCheck + new Vector2I(-1, 0));
+            var cellS = generator.GetAreaCell(cellToCheck + new Vector2I(1, 0));
+            var cellW = generator.GetAreaCell(cellToCheck + new Vector2I(0, -1));
+            var cellE = generator.GetAreaCell(cellToCheck + new Vector2I(0, 1));
 
-            var foundFrom = from.Item2
-                ? // Looking for area
-                    cellN?.Area == from.Item1 ||
-                    cellS?.Area == from.Item1 ||
-                    cellE?.Area == from.Item1 ||
-                    cellW?.Area == from.Item1
-                : // Looking for room
-                    cellN?.Room == from.Item1 ||
-                    cellS?.Room == from.Item1 ||
-                    cellE?.Room == from.Item1 ||
-                    cellW?.Room == from.Item1;
-            var foundTo = to.Item2
-                ? // Looking for area
-                    cellN?.Area == to.Item1 ||
-                    cellS?.Area == to.Item1 ||
-                    cellE?.Area == to.Item1 ||
-                    cellW?.Area == to.Item1
-                : // Looking for room
-                    cellN?.Room == to.Item1 ||
-                    cellS?.Room == to.Item1 ||
-                    cellE?.Room == to.Item1 ||
-                    cellW?.Room == to.Item1;
+            var foundFrom = cellN == from ||
+                    cellS == from ||
+                    cellE == from ||
+                    cellW == from;
+            var foundTo = cellN == to ||
+                    cellS == to ||
+                    cellE == to ||
+                    cellW == to;
 
             if (foundFrom && foundTo) result.Add(cellToCheck);
         }
@@ -232,9 +157,8 @@ public class GridConnection
         return result;
     }
 
-    private GridConnection(uint id, bool isArea)
+    private GridConnection(uint id)
     {
         this.id = id;
-        this.isArea = isArea;
     }
 }

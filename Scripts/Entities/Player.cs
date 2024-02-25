@@ -105,12 +105,11 @@ public partial class Player : CharacterBody3D
 	private void placePlayerInRoom()
 	{
 		var dungeonGrid = GetNode<DungeonGrid>("%DungeonGrid");
-		var portalLocation = dungeonGrid.gridGenerator.PortalLocation;
+		var portalLocation = dungeonGrid.gridGenerator.portalLocation;
 
 		Position = new Vector3(
-				portalLocation.Item1 * dungeonGrid.cellSizeOffset.X - 2,
-				0,
-				portalLocation.Item2 * dungeonGrid.cellSizeOffset.Y - 2
-			);
+			portalLocation.X * dungeonGrid.cellSizeOffset.X - 2,
+			0,
+			portalLocation.Y * dungeonGrid.cellSizeOffset.Y - 2);
 	}
 }

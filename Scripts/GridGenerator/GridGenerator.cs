@@ -322,7 +322,7 @@ public class GridGenerator
             var room = roomQueue.Dequeue();
             floorGrid = room.Apply(floorGrid);
         }
-    } 
+    }
 
     public void PerformAutomataRepetitive(int steps = 5)
     {
@@ -518,13 +518,26 @@ public class GridGenerator
         for (var y = 0; y < gridSize.Y; y++)
         {
             for (var x = 0; x < gridSize.X; x++)
-                output +=
-                    x == portalLocation.X &&
-                    y == portalLocation.Y
-                        ? "PP"
-                        : floorGrid[x, y]
-                            ? "  "
-                            : "██";
+            {
+                var v = new Vector2I(x, y);
+
+                // Portal location
+                if (x == portalLocation.X && y == portalLocation.Y)
+                    output += "PP";
+                // Doors
+                else if (GetDoorCell(v) ?? false)
+                    output += "░░";
+                // Area mapping
+                else if (GetAreaCell(v) > 0)
+                    output += GetAreaCell(v) < 10
+                        ? $"0{GetAreaCell(v)}"
+                        : $"{GetAreaCell(v)}";
+                // Default
+                else
+                    output += (GetFloorCell(v) ?? false)
+                        ? "  "
+                        : "██";
+            }
 
             output += "\n";
         }

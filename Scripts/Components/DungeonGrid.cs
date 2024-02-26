@@ -71,16 +71,7 @@ public partial class DungeonGrid : Node3D
             roomSizeMaximum = roomSizeMaximum,
             minimumNeighbourWallsForFloor = minimumNeighbourWallsForFloor,
         };
-        bool done;
-        do
-        {
-            // Since we aren't resetting our randomness (i.e. by 
-            // re-supplying it with a seed), this shouldn't break 
-            // seed uniqueness. Since every time this seed would be 
-            // picked, the same amount of repeats would need to happen
-            // here until the first "valid" dungeon appears.
-            done = gridGenerator.Automate(dungeonSize);
-        } while (!done);
+        gridGenerator.Automate(dungeonSize);
 
         if (printGeneratorResultToConsole)
             gridGenerator.PrintToConsole();

@@ -108,10 +108,8 @@ public class GridGenerator
     /// <param name="floorPercentage">Percentage of floor tiles to appear in 
     /// the initial randomized grid. 0% = 0.0; 100% = 1.0.</param>
     /// <returns>true, if the dungeon is valid, false otherwise.</returns>
-    public bool Automate(Vector2I gridSize, double floorPercentage = 0.60)
+    public void Automate(Vector2I gridSize, double floorPercentage = 0.60)
     {
-        bool result;
-
         // Initialize the grid randomly, using the size and percentage given
         InitializeAutomataGrid(gridSize, floorPercentage);
 
@@ -133,10 +131,7 @@ public class GridGenerator
         AssignPortalLocation();
 
         // Find possible door locations and place doors where needed
-        var doorwayGrid = CheckForDoorways();
-        result = PlaceDoors(doorwayGrid);
-
-        return result;
+        PlaceDoors();
     }
 
     public void AssignPortalLocation()
@@ -162,44 +157,81 @@ public class GridGenerator
         bossAreaId = FindBiggestArea();
     }
 
-    public bool PlaceDoors(bool[,] doorwayGrid)
+    public void PlaceDoors()
     {
-        // Compute connections between rooms and areas.
-        // On failure (== no connection between main and boss room), 
-        // return false and end early.
-        var gridConnectionsResult = GridConnection.BuildFromGenerator(this, doorwayGrid);
-        if (gridConnectionsResult == null) return false;
-        else
+        // Find all possible door placements
+        // Either it's area a -> b, or null if no such door tile exists
+        // at the probed location.
+        var possibleDoorGrid = FindPossibleDoorLocations();
+
+        // Compute one-directional connections.
+        // Meaning: 1 -> 2 and 2 -> 1 should be considered the same connection
+        // as Area 1 and 2 will be connected, no matter from which direction we
+        // look at it.
+        // Easy approach: HashSet of a (A, B) tuple.
+        // A always becomes the smaller area id.
+        // B always becomes the bigger area id.
+        // Thus, with 1 -> 2 will be A: 1, B: 2
+        // And, with 2 -> 1 will be A: 1, B: 2
+        // The HashSet should drop the 2nd (1, 2) connection we are 
+        // trying to add!
+        var connections = new HashSet<(uint, uint)>();
+        foreach (var e in possibleDoorGrid)
         {
-            gridConnections.Clear();
-            gridConnections.AddRange(gridConnectionsResult);
+            // Skip any nulls
+            if (e == null) continue;
+
+            var i1 = e.Value.Item1;
+            var i2 = e.Value.Item2;
+
+            uint a, b;
+            if (i1 < i2)
+            {
+                a = i1;
+                b = i2;
+            }
+            else
+            {
+                a = i2;
+                b = i1;
+            }
+
+            connections.Add((a, b));
         }
 
-        // Put all connections that have been found in a queue for processing.
-        // Tuple: (From Room/Area ID, is from ID area?, To Room/Area ID, is to ID area?)
-        var connectionsToBeMade = new Queue<(uint, uint)>();
-        foreach (var gridConnection in gridConnections)
+        // Loop through all connections, find doorways that are 
+        // in-between both areas
+        foreach (var connection in connections)
         {
-            foreach (var areaConnection in gridConnection.areaConnections)
-                connectionsToBeMade.Enqueue((gridConnection.id, areaConnection));
+            var positionsOfPossibleDoors = new HashSet<(int, int)>();
+
+            for (var x = 0; x < gridSize.X; x++)
+                for (var y = 0; y < gridSize.Y; y++)
+                {
+                    var possibleDoorGridCell = possibleDoorGrid[x, y];
+
+                    // Skip null entries
+                    if (possibleDoorGridCell == null) continue;
+
+                    if ((possibleDoorGridCell.Value.Item1 == connection.Item1 ||
+                        possibleDoorGridCell.Value.Item2 == connection.Item1) &&
+                        (possibleDoorGridCell.Value.Item1 == connection.Item2 ||
+                        possibleDoorGridCell.Value.Item2 == connection.Item2))
+                    {
+                        positionsOfPossibleDoors.Add((x, y));
+                    }
+                }
+
+            if (positionsOfPossibleDoors.Count() == 0)
+            {
+                GD.PrintErr($"Failed finding a connection between area {connection.Item1} and {connection.Item2}, yet it got added to possible connections?");
+                continue;
+            }
+
+            // Pick any single candidates and mark it as a door
+            var chosenDoorTile = positionsOfPossibleDoors.ElementAt(R.Next(0, positionsOfPossibleDoors.Count()));
+            doorGrid[chosenDoorTile.Item1, chosenDoorTile.Item2] = true;
         }
-
-        while (connectionsToBeMade.Count() > 0)
-        {
-            var connectionToBeMade = connectionsToBeMade.Dequeue();
-
-            // Find all "possible door cell" candidates that match the
-            // from and to ID (and area/room specification)
-            // TODO
-            var connectedTiles = GridConnection.FindConnectingCells(this, doorwayGrid, connectionToBeMade.Item1, connectionToBeMade.Item2);
-
-            GD.Print($"{connectionToBeMade.Item1} -> {connectionToBeMade.Item2}: {connectedTiles.Count()}");
-
-            // Pick any of the candidates and mark it as a door
-            // TODO
-        }
-
-        return true;
     }
 
     public uint FindBiggestArea()
@@ -218,9 +250,9 @@ public class GridGenerator
         return biggestAreaId;
     }
 
-    public bool[,] CheckForDoorways()
+    public (uint, uint)?[,] FindPossibleDoorLocations()
     {
-        var result = new bool[gridSize.X, gridSize.Y];
+        var result = new (uint, uint)?[gridSize.X, gridSize.Y];
         for (var x = 0; x < gridSize.X; x++)
             for (var y = 0; y < gridSize.Y; y++)
             {
@@ -234,17 +266,27 @@ public class GridGenerator
                 var cellE = GetFloorCell(v + new Vector2I(0, 1));
                 var cellW = GetFloorCell(v + new Vector2I(0, -1));
 
-                result[x, y] = (
-                    (cellN ?? false) &&
+                uint a;
+                uint b;
+                if ((cellN ?? false) &&
                     (cellS ?? false) &&
                     (!cellE ?? false) &&
-                    (!cellW ?? false)
-                ) || (
+                    (!cellW ?? false))
+                {
+                    a = GetAreaCell(v + new Vector2I(-1, 0))!.Value;
+                    b = GetAreaCell(v + new Vector2I(1, 0))!.Value;
+                }
+                else if ((!cellN ?? false) &&
+                    (!cellS ?? false) &&
                     (cellE ?? false) &&
-                    (cellW ?? false) &&
-                    (!cellN ?? false) &&
-                    (!cellS ?? false)
-                );
+                    (cellW ?? false))
+                {
+                    a = GetAreaCell(v + new Vector2I(0, -1))!.Value;
+                    b = GetAreaCell(v + new Vector2I(0, 1))!.Value;
+                }
+                else continue;
+
+                result[x, y] = (a, b);
             }
         return result;
     }

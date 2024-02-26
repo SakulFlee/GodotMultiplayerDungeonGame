@@ -10,18 +10,18 @@ public class GridConnection
 
     public bool isOnMainPath { get; private set; } = false;
 
-    public static List<GridConnection>? BuildFromGenerator(GridGenerator generator, bool[,] doorwayGrid)
+    public static HashSet<GridConnection>? BuildFromGenerator(GridGenerator generator, bool[,] doorwayGrid)
     {
         bool bossRoomFound = false;
 
         // Make a list of areas and find connections
-        var dictionary = new Dictionary<uint, GridConnection>();
+        var connectionLookupTable = new Dictionary<uint, GridConnection>();
         for (uint areaId = 1; areaId <= generator.maxArea; areaId++)
         {
-            dictionary.Add(areaId, new GridConnection(areaId));
+            connectionLookupTable.Add(areaId, new GridConnection(areaId));
             foreach (var possibleConnection in CheckForConnections(generator, areaId, doorwayGrid))
                 if (possibleConnection != areaId)
-                    dictionary[areaId].areaConnections.Add(possibleConnection);
+                    connectionLookupTable[areaId].areaConnections.Add(possibleConnection);
         }
 
         // Start queue at portal room
@@ -35,7 +35,7 @@ public class GridConnection
         do
         {
             var currentEntry = queue.Dequeue();
-            var currentGraph = dictionary[currentEntry];
+            var currentGraph = connectionLookupTable[currentEntry];
 
             // Set as being on the main path
             currentGraph.isOnMainPath = true;
@@ -47,16 +47,20 @@ public class GridConnection
             // add other non-main path areas
             foreach (var neighbourArea in currentGraph.areaConnections)
             {
-                var neighbourEntry = dictionary[neighbourArea];
-                if (!neighbourEntry.isOnMainPath)
+                var neighbourEntry = connectionLookupTable[neighbourArea];
+                // Check if the target neighbour room is already set to be 
+                // on the main path. If not: Enqueue it!
+                if (!neighbourEntry.isOnMainPath) {
+
                     queue.Enqueue(neighbourArea);
+                }
             }
         } while (queue.Count() > 0);
 
         if (bossRoomFound)
         {
-            var output = new List<GridConnection>();
-            foreach (var gridConnection in dictionary.Values)
+            var output = new HashSet<GridConnection>();
+            foreach (var gridConnection in connectionLookupTable.Values)
                 output.Add(gridConnection);
             return output;
         }

@@ -8,7 +8,7 @@ public class GridGenerator
     public int roomSizeMinimum { get; set; } = 5;
     public int roomSizeMaximum { get; set; } = 30;
     public int minimumNeighbourWallsForFloor { get; set; } = 4;
-    public int smallAreaThresholdCells { get; set; } = 9; // TODO
+    public int areaMinimumCells { get; set; } = 9;
 
     public Random R = Random.Shared;
 
@@ -124,6 +124,14 @@ public class GridGenerator
         EnsureEdgesOfGridAreWalls();
 
         // Assign areas to each enclosed floor area
+        AssignAreas();
+
+        // Check for areas that are too small (<see cref="areaMinimumCells"/>)
+        // and remove them. Re-Assigning areas afterwards is required to not
+        // have any 0-cell areas!
+        CheckAndRemoveSmallAreas();
+
+        // Re-Assign areas after smaller areas got removed
         AssignAreas();
 
         // Assign the boss room and portal location
@@ -306,6 +314,17 @@ public class GridGenerator
         }
     }
 
+    private void CheckAndRemoveSmallAreas()
+    {
+        for (uint area = 1; area <= maxArea; area++)
+        {
+            var cellsInArea = FindAreaCells(area);
+            if (cellsInArea.Count() <= minimumNeighbourWallsForFloor)
+                foreach (var cell in cellsInArea)
+                    floorGrid[cell.X, cell.Y] = false;
+        }
+    }
+
     /// <summary>
     /// Creates a queue of randomized rooms to be used in <see cref="PlaceRooms(Queue{IGridRoom})"/>
     /// </summary>
@@ -387,8 +406,20 @@ public class GridGenerator
         floorGrid = outputGrid;
     }
 
+    /// <summary>
+    /// Any existing area grid will be nulled.
+    /// 
+    /// It then will step through each X & Y coordinate
+    /// and check for floor areas that aren't assigned
+    /// an area id yet. For each unassigned area 
+    /// <see cref="AssignArea(Vector2I, uint)"/> is called.
+    /// Said function, will do the area assigning.
+    /// </summary>
     public void AssignAreas()
     {
+        maxArea = 0;
+        areaGrid = new uint[gridSize.X, gridSize.Y];
+
         uint currentArea = 1;
         var currentPosition = new Vector2I(-1, 0);
         do

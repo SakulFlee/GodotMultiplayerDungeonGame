@@ -20,6 +20,8 @@ public partial class DungeonGrid : Node3D
     [Export]
     public int minimumNeighbourWallsForFloor { get; set; } = 4;
 
+    [Export]
+    public int areaMinimumCells { get; set; } = 9;
 
     [Export]
     public Vector2I dungeonSize = new Vector2I(70, 70);
@@ -70,6 +72,7 @@ public partial class DungeonGrid : Node3D
             roomSizeMinimum = roomSizeMinimum,
             roomSizeMaximum = roomSizeMaximum,
             minimumNeighbourWallsForFloor = minimumNeighbourWallsForFloor,
+            areaMinimumCells = areaMinimumCells,
         };
         gridGenerator.Automate(dungeonSize);
 

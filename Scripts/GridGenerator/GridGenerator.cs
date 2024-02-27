@@ -42,7 +42,6 @@ public class GridGenerator
 
     public Vector2I portalLocation { get; private set; } = Vector2I.Zero;
     public uint bossAreaId { get; private set; } = 0;
-    public List<GridConnection> gridConnections { get; private set; } = new();
 
     public GridGenerator(int seed = 12345)
     {

@@ -104,10 +104,22 @@ public partial class DungeonGrid : Node3D
                     interCardinalsToo: false);
                 if (wallCount > 3) continue;
 
-                // Pick a (randomized!) floor or wall tile from the pool,
-                // based on if the cell in the generator is a floor or not. 
-                var cell = gridGenerator.GetFloorCell(v) ?? false;
-                int pickedTile = PickTile(cell);
+                int tileToPlace;
+
+                var doorCell = gridGenerator.GetDoorCell(v) ?? false;
+                if (doorCell)
+                {
+                    // There should be a door here. We will handle this later, for now just set a floor tile.
+                    tileToPlace = PickTile(true);
+                }
+                else
+                {
+                    // Not a door.
+                    // Pick a (randomized!) floor or wall tile from the pool,
+                    // based on if the cell in the generator is a floor or not. 
+                    var cell = gridGenerator.GetFloorCell(v) ?? false;
+                    tileToPlace = PickTile(cell);
+                }
 
                 for (var a = 0; a < cellSizeOffset.X; a++)
                     for (var b = 0; b < cellSizeOffset.Y; b++)
@@ -118,7 +130,7 @@ public partial class DungeonGrid : Node3D
                                 0,
                                 y * cellSizeOffset.Y + b
                             ),
-                            pickedTile
+                            tileToPlace
                         );
             }
     }
@@ -175,7 +187,7 @@ public partial class DungeonGrid : Node3D
                     (cellSW ?? false) ||
                     (cellNW ?? false))
                 {
-                    int pickedTile = PickTile(isFloor: false);
+                    int tileToPlace = PickTile(isFloor: false);
 
                     for (var a = 0; a < cellSizeOffset.X; a++)
                         for (var b = 0; b < cellSizeOffset.Y; b++)
@@ -186,7 +198,7 @@ public partial class DungeonGrid : Node3D
                                     0,
                                     y * cellSizeOffset.Y + b
                                 ),
-                                pickedTile
+                                tileToPlace
                             );
                 }
             }

@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
+using SIPSorcery.SIP;
 
 public class GridGenerator
 {
@@ -182,7 +184,7 @@ public class GridGenerator
         // And, with 2 -> 1 will be A: 1, B: 2
         // The HashSet should drop the 2nd (1, 2) connection we are 
         // trying to add!
-        var connections = new HashSet<(uint, uint)>();
+        var allPossibleConnections = new HashSet<(uint, uint)>();
         foreach (var e in possibleDoorGrid)
         {
             // Skip any nulls
@@ -203,12 +205,66 @@ public class GridGenerator
                 b = i1;
             }
 
-            connections.Add((a, b));
+            allPossibleConnections.Add((a, b));
+        }
+
+        // Find a path, starting from the portal room, through the dungeon.
+        // Said path will define where doors are placed.
+        var filteredConnections = new HashSet<(uint, uint)>();
+        var roomsChecked = new HashSet<uint>();
+        var roomsToCheck = new Queue<uint>();
+        roomsToCheck.Enqueue(areaGrid[portalLocation.X, portalLocation.Y]);
+
+        while (roomsToCheck.Count() > 0)
+        {
+            var roomToCheck = roomsToCheck.Dequeue();
+
+            // Check if the room is already checked, skip if so
+            if (roomsChecked.Contains(roomToCheck)) continue;
+
+            // Otherwise, add it to the checked rooms!
+            roomsChecked.Add(roomToCheck);
+
+            // Loop through all possible connects and find connections that
+            // have our current area either as their "from" or "to".
+            foreach (var (from, to) in allPossibleConnections)
+                if (from == roomToCheck || to == roomToCheck)
+                {
+                    // Add this connection to the list.
+                    // The format is (A, B); where A is always the
+                    // smaller ID and B is always the bigger ID.
+                    uint a, b;
+                    if (from < to)
+                    {
+                        a = from;
+                        b = to;
+                    }
+                    else
+                    {
+                        a = to;
+                        b = from;
+                    }
+                    filteredConnections.Add((a, b));
+
+                    // Enqueue the next connection to be checked.
+                    // But, only enqueue if the connected areas isn't
+                    // already checked.
+                    if (from == roomToCheck)
+                    {
+                        if (!roomsChecked.Contains(to))
+                            roomsToCheck.Enqueue(to);
+                    }
+                    else
+                    {
+                        if (!roomsChecked.Contains(from))
+                            roomsToCheck.Enqueue(from);
+                    }
+                }
         }
 
         // Loop through all connections, find doorways that are 
         // in-between both areas
-        foreach (var connection in connections)
+        foreach (var connection in filteredConnections)
         {
             var positionsOfPossibleDoors = new HashSet<(int, int)>();
 

@@ -8,13 +8,9 @@
 [node name="CellLibrary" type="Node3D"]
 
 [node name="StoneWall" parent="." instance=ExtResource("1_3lwnj")]
-visible = false
 
 [node name="StoneFloor1" parent="." instance=ExtResource("2_jk5lv")]
-visible = false
 
 [node name="StoneFloor2" parent="." instance=ExtResource("3_hgy77")]
-visible = false
 
 [node name="StoneFloorTile" parent="." instance=ExtResource("4_jbipe")]
-visible = false

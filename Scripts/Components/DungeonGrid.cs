@@ -12,6 +12,18 @@ public partial class DungeonGrid : Node3D
     public int seed = -1;
 
     [Export]
+    public int roomSizeMinimum { get; set; } = 5;
+
+    [Export]
+    public int roomSizeMaximum { get; set; } = 30;
+
+    [Export]
+    public int minimumNeighbourWallsForFloor { get; set; } = 4;
+
+    [Export]
+    public int areaMinimumCells { get; set; } = 9;
+
+    [Export]
     public Vector2I dungeonSize = new Vector2I(70, 70);
 
     [ExportGroup("Godot")]
@@ -54,8 +66,18 @@ public partial class DungeonGrid : Node3D
         if (seed < 0) seed = Random.Shared.Next(int.MaxValue);
         GD.Print($"[DungeonGrid] Seed: {seed}");
 
-        gridGenerator = new GridGenerator(((uint)dungeonSize.X, (uint)dungeonSize.Y), seed: seed);
-        gridGenerator.Automate(printFinalResultToConsole: printGeneratorResultToConsole);
+        // Keep generating until a valid dungeon appears.
+        gridGenerator = new GridGenerator(seed: seed)
+        {
+            roomSizeMinimum = roomSizeMinimum,
+            roomSizeMaximum = roomSizeMaximum,
+            minimumNeighbourWallsForFloor = minimumNeighbourWallsForFloor,
+            areaMinimumCells = areaMinimumCells,
+        };
+        gridGenerator.Automate(dungeonSize);
+
+        if (printGeneratorResultToConsole)
+            gridGenerator.PrintToConsole();
 
         PlaceGeneratorOutput();
         FixCorners();
@@ -64,23 +86,40 @@ public partial class DungeonGrid : Node3D
     }
 
     public int PickTile(bool isFloor) => isFloor
-        ? floorTiles[Random.Shared.Next(0, floorTiles.Count())]
-        : wallTiles[Random.Shared.Next(0, wallTiles.Count())];
+        ? floorTiles[gridGenerator.R.Next(0, floorTiles.Count())]
+        : wallTiles[gridGenerator.R.Next(0, wallTiles.Count())];
 
     public void PlaceGeneratorOutput()
     {
-        for (int x = 0; x < gridGenerator.SizeX; x++)
-            for (int y = 0; y < gridGenerator.SizeY; y++)
+        for (var x = 0; x < gridGenerator.gridSize.X; x++)
+            for (var y = 0; y < gridGenerator.gridSize.Y; y++)
             {
+                var v = new Vector2I(x, y);
+
                 // Any wall that is surrounded cardinally by more than three 
                 // walls will be skipped.
-                var wallCount = gridGenerator.CountNeighboursOfType((x, y), isFloor: false, countNull: true, interCardinalsToo: false);
+                var wallCount = gridGenerator.CountWallNeighbours(
+                    v,
+                    countNull: true,
+                    interCardinalsToo: false);
                 if (wallCount > 3) continue;
 
-                // Pick a (randomized!) floor or wall tile from the pool,
-                // based on if the cell in the generator is a floor or not. 
-                var cell = gridGenerator.GetCell((x, y));
-                int pickedTile = PickTile(cell.IsFloor);
+                int tileToPlace;
+
+                var doorCell = gridGenerator.GetDoorCell(v) ?? false;
+                if (doorCell)
+                {
+                    // There should be a door here. We will handle this later, for now just set a floor tile.
+                    tileToPlace = PickTile(true);
+                }
+                else
+                {
+                    // Not a door.
+                    // Pick a (randomized!) floor or wall tile from the pool,
+                    // based on if the cell in the generator is a floor or not. 
+                    var cell = gridGenerator.GetFloorCell(v) ?? false;
+                    tileToPlace = PickTile(cell);
+                }
 
                 for (var a = 0; a < cellSizeOffset.X; a++)
                     for (var b = 0; b < cellSizeOffset.Y; b++)
@@ -91,19 +130,21 @@ public partial class DungeonGrid : Node3D
                                 0,
                                 y * cellSizeOffset.Y + b
                             ),
-                            pickedTile
+                            tileToPlace
                         );
             }
     }
 
     public void FixCorners()
     {
-        for (int x = 0; x < gridGenerator.SizeX; x++)
-            for (int y = 0; y < gridGenerator.SizeY; y++)
+        for (var x = 0; x < gridGenerator.gridSize.X; x++)
+            for (var y = 0; y < gridGenerator.gridSize.Y; y++)
             {
+                var v = new Vector2I(x, y);
+
                 // Skip if the current cell is a floor
-                var cell = gridGenerator.GetCell((x, y));
-                if (cell.IsFloor) continue;
+                var cell = gridGenerator.GetFloorCell(v) ?? false; // TODO: true?
+                if (cell) continue;
 
                 // Count cardinal walls and skip any cells that aren't
                 // surrounded by walls. Visually We want:
@@ -114,13 +155,16 @@ public partial class DungeonGrid : Node3D
                 //  ? = Unknown
                 //  W = Wall
                 // [X] = Cell in question
-                var wallCount = gridGenerator.CountNeighboursOfType((x, y), isFloor: false, countNull: true, interCardinalsToo: false);
+                var wallCount = gridGenerator.CountWallNeighbours(
+                    v,
+                    countNull: true,
+                    interCardinalsToo: false);
                 if (wallCount != 4) continue;
 
-                var cellNE = gridGenerator.GetCell((x - 1, y + 1));
-                var cellNW = gridGenerator.GetCell((x - 1, y - 1));
-                var cellSE = gridGenerator.GetCell((x + 1, y + 1));
-                var cellSW = gridGenerator.GetCell((x + 1, y - 1));
+                var cellNE = gridGenerator.GetFloorCell(v + new Vector2I(-1, 1));
+                var cellNW = gridGenerator.GetFloorCell(v + new Vector2I(-1, -1));
+                var cellSE = gridGenerator.GetFloorCell(v + new Vector2I(1, 1));
+                var cellSW = gridGenerator.GetFloorCell(v + new Vector2I(1, -1));
 
                 // Now, that we only have walls surrounded by other walls,
                 // we can check the inter-cardinals. Visually:
@@ -138,12 +182,12 @@ public partial class DungeonGrid : Node3D
                 // any walls that have more than three walls surrounding them
                 // will be excluded. This removes corner walls which we are
                 // trying to restore here for better looks.
-                if ((cellNE?.IsFloor ?? false) ||
-                    (cellSE?.IsFloor ?? false) ||
-                    (cellSW?.IsFloor ?? false) ||
-                    (cellNW?.IsFloor ?? false))
+                if ((cellNE ?? false) ||
+                    (cellSE ?? false) ||
+                    (cellSW ?? false) ||
+                    (cellNW ?? false))
                 {
-                    int pickedTile = PickTile(isFloor: false);
+                    int tileToPlace = PickTile(isFloor: false);
 
                     for (var a = 0; a < cellSizeOffset.X; a++)
                         for (var b = 0; b < cellSizeOffset.Y; b++)
@@ -154,7 +198,7 @@ public partial class DungeonGrid : Node3D
                                     0,
                                     y * cellSizeOffset.Y + b
                                 ),
-                                pickedTile
+                                tileToPlace
                             );
                 }
             }

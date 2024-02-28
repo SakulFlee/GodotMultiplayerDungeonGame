@@ -1,40 +1,35 @@
 public interface IGridRoom
 {
-    public (uint, uint) GetPosition();
-
-    public (uint, uint) GetMaxSize();
-
+    public Vector2I GetPosition();
+    public Vector2I GetSize();
     public GridRoomType GetType();
 
-    public uint GetRoomId();
-
-    public bool IsInsideRoom((uint, uint) position)
-    => position.Item1 >= GetPosition().Item1 &&
-            position.Item2 >= GetPosition().Item2 &&
-            position.Item1 < GetPosition().Item1 + GetMaxSize().Item1 &&
-            position.Item2 < GetPosition().Item2 + GetMaxSize().Item2;
-
-    public GridCell[,] Apply(GridCell[,] grid)
+    public bool[,] Apply(bool[,] floorGrid)
     {
-        for (uint x = 0; x < GetMaxSize().Item1; x++)
-            for (uint y = 0; y < GetMaxSize().Item2; y++)
+        var startX = GetPosition().X;
+        var startY = GetPosition().Y;
+        var endX = startX + GetSize().X;
+        var endY = startY + GetSize().Y;
+
+        for (var x = startX; x < endX; x++)
+            for (var y = startY; y < endY; y++)
             {
-                var actualX = GetPosition().Item1 + x;
-                var actualY = GetPosition().Item2 + y;
+                // Skip if out-of-bounce
+                if (x < 0 ||
+                    y < 0 ||
+                    x >= floorGrid.GetUpperBound(0) ||
+                    y >= floorGrid.GetUpperBound(1)) continue;
 
-                // If out-of-bounce, skip
-                if (GridGenerator.GetCell(grid, (actualX, actualY)) == null) continue;
-
-                // Set wall to edge tiles
-                if (x == 0 || y == 0 || x == GetMaxSize().Item1 - 1 || y == GetMaxSize().Item2 - 1)
-                    grid[actualX, actualY].IsFloor = false;
-                // Not on an edge, so floor
+                // Set any outer edge tiles to walls
+                if (x == startX ||
+                    y == startY ||
+                    x == endX - 1 ||
+                    y == endY - 1)
+                    floorGrid[x, y] = false;
+                // and everything else to floor
                 else
-                    grid[actualX, actualY].IsFloor = true;
-
-                grid[actualX, actualY].Room = GetRoomId();
+                    floorGrid[x, y] = true;
             }
-
-        return grid;
+        return floorGrid;
     }
 }

@@ -2,471 +2,670 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
+using SIPSorcery.SIP;
 
 public class GridGenerator
 {
-    public uint MinimumNeighbourWallsForFloor = 4;
-    public uint DesiredRoomCount = 25;  // Maybe: Max Size / 3 ?
-    public uint SmallAreaThresholdCells = 9;
+    public int roomSizeMinimum { get; set; } = 5;
+    public int roomSizeMaximum { get; set; } = 30;
+    public int minimumNeighbourWallsForFloor { get; set; } = 4;
+    public int areaMinimumCells { get; set; } = 9;
 
-    public Random R;
-    public GridCell[,] Grid { get; private set; }
-    public int SizeX { get => Grid.GetUpperBound(0); }
-    public int SizeY { get => Grid.GetUpperBound(1); }
+    public Random R = Random.Shared;
 
-    public uint AreaCount { get; private set; } = 0;
-    public uint RoomCount { get; private set; } = 0;
+    /// <summary>
+    /// The floor grid. 
+    /// If at a given v = (X, Y) location the array returns true, 
+    /// the probed cell is a floor. If it returns false instead,
+    /// the probed tile is a wall.
+    /// </summary>
+    public bool[,] floorGrid { get; private set; } = new bool[0, 0];
 
-    public GridGenerator((uint, uint) gridSize, int seed = 12345, double floorPercentage = 0.60, bool printToConsole = false)
+    /// <summary>
+    /// The area grid.
+    /// Returns the area ID at a given location v = (X, Y).
+    /// Or 0, if the probed cell doesn't have an area assigned.
+    /// </summary>
+    public uint[,] areaGrid { get; private set; } = new uint[0, 0];
+
+    /// <summary>
+    /// The door grid.
+    /// If at a given v = (X, Y) location the array returns true, 
+    /// the probed cell is a door. If it returns false instead,
+    /// the probed tile is a NOT a door (e.g. a wall instead, check
+    /// other layers though!).
+    /// </summary>
+    public bool[,] doorGrid { get; private set; } = new bool[0, 0];
+
+    public Vector2I gridSize = Vector2I.Zero;
+
+    public uint maxArea { get; private set; } = 0;
+
+    public Vector2I portalLocation { get; private set; } = Vector2I.Zero;
+    public uint bossAreaId { get; private set; } = 0;
+
+    public GridGenerator(int seed = 12345)
+    {
+        InitializeRandomness(seed);
+    }
+
+    /// <summary>
+    /// This will set (or reset) the internally used randomness with a given
+    /// seed. If said randomness has been used already, it will effectively be
+    /// reset, thus repeating the exact same results.
+    /// </summary>
+    /// <param name="seed">The seed to be initialized with</param>
+    public void InitializeRandomness(int seed = 12345)
     {
         R = new Random(seed);
-
-        Grid = new GridCell[gridSize.Item1, gridSize.Item2];
-        for (var x = 0; x < gridSize.Item1; x++)
-            for (var y = 0; y < gridSize.Item2; y++)
-                Grid[x, y] = R.NextDouble() <= floorPercentage
-                    ? new GridCell(isFloor: true)
-                    : new GridCell(isFloor: false);
-
-        if (printToConsole)
-        {
-            GD.Print(">>> Randomized Grid:");
-            PrintToConsole();
-        }
     }
 
-    public void Automate(bool printAutomataStepsToConsole = false, bool printRoomToConsole = false, bool printAreasToConsole = false, bool printInvalidAreaFixToConsole = false, bool printDoorwaysToConsole = false, bool printFinalResultToConsole = false)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="gridSize">Size of the Grid starting at 0</param>
+    /// <param name="floorPercentage">
+    /// Percentage of floor tiles to appear.
+    ///   0% equals 0.0
+    /// 100% equals 1.0
+    /// </param>
+    public void InitializeAutomataGrid(
+        Vector2I gridSize,
+        double floorPercentage = 0.60
+    )
     {
-        PerformAutomataRepetitive(printStepsToConsole: printAutomataStepsToConsole);
-        PlaceRooms(printToConsole: printRoomToConsole);
-        AssignAreas(printStepsToConsole: printAreasToConsole);
-        FixInvalidAreas(printToConsole: printInvalidAreaFixToConsole);
-        CheckForDoorways(printToConsole: printDoorwaysToConsole);
+        // Sanity checks
+        if (gridSize.X <= 0 || gridSize.Y <= 0)
+            throw new Exception("GridSize must be > 0 on both X and Y!");
+        if (floorPercentage <= 0.0)
+            throw new Exception("Floor percentage must be > 0.0");
+        if (floorPercentage > 1.0)
+            throw new Exception("Floor percentage must be <= 1.0");
 
-        if (printFinalResultToConsole) PrintToConsole();
-    }
+        // Assign variables
+        this.gridSize = gridSize;
+        floorGrid = new bool[gridSize.X, gridSize.Y];
+        areaGrid = new uint[gridSize.X, gridSize.Y];
+        doorGrid = new bool[gridSize.X, gridSize.Y];
 
-    public void CheckForDoorways(bool printToConsole = false)
-    {
-        for (uint x = 0; x < SizeX; x++)
-            for (uint y = 0; y < SizeY; y++)
+        // Initialize grids with data
+        for (var x = 0; x < gridSize.X; x++)
+            for (var y = 0; y < gridSize.Y; y++)
             {
-                // Skip floor tiles
-                if (Grid[x, y].IsFloor) continue;
-
-                var cellN = GetCell((x - 1, y));
-                var cellS = GetCell((x + 1, y));
-                var cellE = GetCell((x, y + 1));
-                var cellW = GetCell((x, y - 1));
-
-                Grid[x, y].CanBeDoor = (cellN != null && cellN.IsFloor
-                    && cellS != null && cellS.IsFloor
-                    && cellE != null && !cellE.IsFloor
-                    && cellW != null && !cellW.IsFloor)
-                    ||
-                    (cellE != null && cellE.IsFloor
-                    && cellW != null && cellW.IsFloor
-                    && cellN != null && !cellN.IsFloor
-                    && cellS != null && !cellS.IsFloor);
+                floorGrid[x, y] = R.NextDouble() <= floorPercentage;
+                areaGrid[x, y] = 0;
+                doorGrid[x, y] = false;
             }
-
-        if (printToConsole) PrintToConsole();
     }
 
-    private void FixEdges()
+    /// <summary>
+    /// Automatically performs all necessary steps to generate a grid dungeon.
+    /// 
+    /// A dungeon is valid if there is a path from the portal
+    /// to the boss room.
+    /// </summary>
+    /// <param name="gridSize">Size of the grid, must be > 0.</param>
+    /// <param name="floorPercentage">Percentage of floor tiles to appear in 
+    /// the initial randomized grid. 0% = 0.0; 100% = 1.0.</param>
+    /// <returns>true, if the dungeon is valid, false otherwise.</returns>
+    public void Automate(Vector2I gridSize, double floorPercentage = 0.60)
     {
-        for (var x = 0; x < SizeX; x++)
-            for (var y = 0; y < SizeY; y++)
-                if (x == 0 || y == 0 || x == SizeX - 1 || y == SizeY - 1)
-                    Grid[x, y] = new GridCell(isFloor: false);
-    }
+        // Initialize the grid randomly, using the size and percentage given
+        InitializeAutomataGrid(gridSize, floorPercentage);
 
-    private void FixTooSmallOrInvalidPlacedAreas()
-    {
-        for (uint area = 1; area <= AreaCount; area++)
-        {
-            uint minX = int.MaxValue;
-            uint minY = int.MaxValue;
-            uint maxX = 0;
-            uint maxY = 0;
+        // Repetitively, perform cellular automata
+        PerformAutomataRepetitive();
 
-            var cellsInArea = FindCellOfArea(area);
-            foreach (var (x, y) in cellsInArea)
-            {
-                if (x < minX)
-                {
-                    minX = x;
-                }
-                else if (y < minY)
-                {
-                    minY = y;
-                }
-                else if (x > maxX)
-                {
-                    maxX = x;
-                }
-                else if (y > maxY)
-                {
-                    maxY = y;
-                }
-            }
+        // Place rooms
+        var rooms = MakeRandomizedRoomQueue();
+        PlaceRooms(rooms);
 
-            var removeArea = minX == int.MaxValue
-                || minY == int.MaxValue
-                || maxX == 0
-                || maxY == 0
-                || minX == maxX
-                || minY == maxY
-                || cellsInArea.Count() < SmallAreaThresholdCells;
+        // Ensure that all edges of the grid are walls
+        EnsureEdgesOfGridAreWalls();
 
-            if (removeArea)
-                foreach (var (x, y) in cellsInArea)
-                    Grid[x, y] = new GridCell(isFloor: false);
-        }
-    }
-
-    private void FixRedoAreas()
-    {
-        AreaCount = 0;
-        for (var x = 0; x < SizeX; x++)
-            for (var y = 0; y < SizeY; y++)
-                Grid[x, y].Area = 0;
-
+        // Assign areas to each enclosed floor area
         AssignAreas();
+
+        // Check for areas that are too small (<see cref="areaMinimumCells"/>)
+        // and remove them. Re-Assigning areas afterwards is required to not
+        // have any 0-cell areas!
+        CheckAndRemoveSmallAreas();
+
+        // Re-Assign areas after smaller areas got removed
+        AssignAreas();
+
+        // Assign the boss room and portal location
+        AssignBossRoom();
+        AssignPortalLocation();
+
+        // Find possible door locations and place doors where needed
+        PlaceDoors();
     }
 
-    private void FixWalledRooms()
+    public void AssignPortalLocation()
     {
-        FindCell((x, y, cell) => !cell.IsFloor && cell.HasRoomData())
-            .ForEach(i => Grid[i.Item1, i.Item2].Room = 0);
-    }
-
-    public void FixInvalidAreas(bool fixGridEdges = true, bool redoAreas = true, bool fixWalledRooms = true, bool printToConsole = false)
-    {
-        if (fixGridEdges)
-            FixEdges();
-
-        FixTooSmallOrInvalidPlacedAreas();
-
-        if (redoAreas)
-            FixRedoAreas();
-
-        if (fixWalledRooms)
-            FixWalledRooms();
-
-        if (printToConsole) PrintToConsole();
-    }
-
-    public List<IGridRoom> MakeRandomRoomList()
-    {
-        var output = new List<IGridRoom>();
-        while (output.Count() <= DesiredRoomCount)
+        do
         {
-            uint roomLocationX = (uint)R.Next(0, SizeX);
-            uint roomLocationY = (uint)R.Next(0, SizeY);
+            var pool = new HashSet<Vector2I>();
+            foreach (var roomCell in FindCell((v, floor, area, door) =>
+                floor &&
+                area > 0 &&
+                (GetFloorCell(v + new Vector2I(-1, 0)) ?? false) &&
+                (GetFloorCell(v + new Vector2I(1, 0)) ?? false) &&
+                (GetFloorCell(v + new Vector2I(0, -1)) ?? false) &&
+                (GetFloorCell(v + new Vector2I(0, 1)) ?? false)))
+                pool.Add(roomCell);
 
-            var maxSizeX = SizeX - roomLocationX;
-            var maxSizeY = SizeY - roomLocationY;
+            portalLocation = pool.ElementAt(R.Next(pool.Count));
+        } while (GetAreaCell(portalLocation) != bossAreaId);
+    }
 
-            const uint minRoomSize = 5;
-            const uint maxRoomSize = 30;
+    public void AssignBossRoom()
+    {
+        bossAreaId = FindBiggestArea();
+    }
 
-            if (maxSizeX < minRoomSize || maxSizeY < minRoomSize) continue;
+    public void PlaceDoors()
+    {
+        // Find all possible door placements
+        // Either it's area a -> b, or null if no such door tile exists
+        // at the probed location.
+        var possibleDoorGrid = FindPossibleDoorLocations();
 
-            uint roomSizeX = (uint)R.Next(
-                (int)minRoomSize,
-                (int)(maxSizeX < maxRoomSize ? maxSizeX : maxRoomSize)
+        // Compute one-directional connections.
+        // Meaning: 1 -> 2 and 2 -> 1 should be considered the same connection
+        // as Area 1 and 2 will be connected, no matter from which direction we
+        // look at it.
+        // Easy approach: HashSet of a (A, B) tuple.
+        // A always becomes the smaller area id.
+        // B always becomes the bigger area id.
+        // Thus, with 1 -> 2 will be A: 1, B: 2
+        // And, with 2 -> 1 will be A: 1, B: 2
+        // The HashSet should drop the 2nd (1, 2) connection we are 
+        // trying to add!
+        var allPossibleConnections = new HashSet<(uint, uint)>();
+        foreach (var e in possibleDoorGrid)
+        {
+            // Skip any nulls
+            if (e == null) continue;
+
+            var i1 = e.Value.Item1;
+            var i2 = e.Value.Item2;
+
+            uint a, b;
+            if (i1 < i2)
+            {
+                a = i1;
+                b = i2;
+            }
+            else
+            {
+                a = i2;
+                b = i1;
+            }
+
+            allPossibleConnections.Add((a, b));
+        }
+
+        // Find a path, starting from the portal room, through the dungeon.
+        // Said path will define where doors are placed.
+        var filteredConnections = new HashSet<(uint, uint)>();
+        var roomsChecked = new HashSet<uint>();
+        var roomsToCheck = new Queue<uint>();
+        roomsToCheck.Enqueue(areaGrid[portalLocation.X, portalLocation.Y]);
+
+        while (roomsToCheck.Count() > 0)
+        {
+            var roomToCheck = roomsToCheck.Dequeue();
+
+            // Check if the room is already checked, skip if so
+            if (roomsChecked.Contains(roomToCheck)) continue;
+
+            // Otherwise, add it to the checked rooms!
+            roomsChecked.Add(roomToCheck);
+
+            // Loop through all possible connects and find connections that
+            // have our current area either as their "from" or "to".
+            foreach (var (from, to) in allPossibleConnections)
+                if (from == roomToCheck || to == roomToCheck)
+                {
+                    // Add this connection to the list.
+                    // The format is (A, B); where A is always the
+                    // smaller ID and B is always the bigger ID.
+                    uint a, b;
+                    if (from < to)
+                    {
+                        a = from;
+                        b = to;
+                    }
+                    else
+                    {
+                        a = to;
+                        b = from;
+                    }
+                    filteredConnections.Add((a, b));
+
+                    // Enqueue the next connection to be checked.
+                    // But, only enqueue if the connected areas isn't
+                    // already checked.
+                    if (from == roomToCheck)
+                    {
+                        if (!roomsChecked.Contains(to))
+                            roomsToCheck.Enqueue(to);
+                    }
+                    else
+                    {
+                        if (!roomsChecked.Contains(from))
+                            roomsToCheck.Enqueue(from);
+                    }
+                }
+        }
+
+        // Loop through all connections, find doorways that are 
+        // in-between both areas
+        foreach (var connection in filteredConnections)
+        {
+            var positionsOfPossibleDoors = new HashSet<(int, int)>();
+
+            for (var x = 0; x < gridSize.X; x++)
+                for (var y = 0; y < gridSize.Y; y++)
+                {
+                    var possibleDoorGridCell = possibleDoorGrid[x, y];
+
+                    // Skip null entries
+                    if (possibleDoorGridCell == null) continue;
+
+                    if ((possibleDoorGridCell.Value.Item1 == connection.Item1 ||
+                        possibleDoorGridCell.Value.Item2 == connection.Item1) &&
+                        (possibleDoorGridCell.Value.Item1 == connection.Item2 ||
+                        possibleDoorGridCell.Value.Item2 == connection.Item2))
+                    {
+                        positionsOfPossibleDoors.Add((x, y));
+                    }
+                }
+
+            if (positionsOfPossibleDoors.Count() == 0)
+            {
+                GD.PrintErr($"Failed finding a connection between area {connection.Item1} and {connection.Item2}, yet it got added to possible connections?");
+                continue;
+            }
+
+            // Pick any single candidates and mark it as a door
+            var chosenDoorTile = positionsOfPossibleDoors.ElementAt(R.Next(0, positionsOfPossibleDoors.Count()));
+            doorGrid[chosenDoorTile.Item1, chosenDoorTile.Item2] = true;
+        }
+    }
+
+    public uint FindBiggestArea()
+    {
+        uint biggestAreaId = 0;
+        var biggestAreaCount = 0;
+        for (uint areaId = 1; areaId <= maxArea; areaId++)
+        {
+            var areaCells = FindAreaCells(areaId);
+            if (areaCells.Count() > biggestAreaCount)
+            {
+                biggestAreaId = areaId;
+                biggestAreaCount = areaCells.Count();
+            }
+        }
+        return biggestAreaId;
+    }
+
+    public (uint, uint)?[,] FindPossibleDoorLocations()
+    {
+        var result = new (uint, uint)?[gridSize.X, gridSize.Y];
+        for (var x = 0; x < gridSize.X; x++)
+            for (var y = 0; y < gridSize.Y; y++)
+            {
+                var v = new Vector2I(x, y);
+
+                // Skip floor tiles
+                if (GetFloorCell(v) ?? false) continue;
+
+                var cellN = GetFloorCell(v + new Vector2I(-1, 0));
+                var cellS = GetFloorCell(v + new Vector2I(1, 0));
+                var cellE = GetFloorCell(v + new Vector2I(0, 1));
+                var cellW = GetFloorCell(v + new Vector2I(0, -1));
+
+                uint a;
+                uint b;
+                if ((cellN ?? false) &&
+                    (cellS ?? false) &&
+                    (!cellE ?? false) &&
+                    (!cellW ?? false))
+                {
+                    a = GetAreaCell(v + new Vector2I(-1, 0))!.Value;
+                    b = GetAreaCell(v + new Vector2I(1, 0))!.Value;
+                }
+                else if ((!cellN ?? false) &&
+                    (!cellS ?? false) &&
+                    (cellE ?? false) &&
+                    (cellW ?? false))
+                {
+                    a = GetAreaCell(v + new Vector2I(0, -1))!.Value;
+                    b = GetAreaCell(v + new Vector2I(0, 1))!.Value;
+                }
+                else continue;
+
+                result[x, y] = (a, b);
+            }
+        return result;
+    }
+
+    private void EnsureEdgesOfGridAreWalls()
+    {
+        for (var x = 0; x < gridSize.X; x++)
+        {
+            floorGrid[x, 0] = false;
+            floorGrid[x, gridSize.Y - 1] = false;
+        }
+
+        for (var y = 0; y < gridSize.Y; y++)
+        {
+            floorGrid[0, y] = false;
+            floorGrid[gridSize.X - 1, y] = false;
+        }
+    }
+
+    private void CheckAndRemoveSmallAreas()
+    {
+        for (uint area = 1; area <= maxArea; area++)
+        {
+            var cellsInArea = FindAreaCells(area);
+            if (cellsInArea.Count() <= minimumNeighbourWallsForFloor)
+                foreach (var cell in cellsInArea)
+                    floorGrid[cell.X, cell.Y] = false;
+        }
+    }
+
+    /// <summary>
+    /// Creates a queue of randomized rooms to be used in <see cref="PlaceRooms(Queue{IGridRoom})"/>
+    /// </summary>
+    /// <returns>Queue of randomized rooms</returns>
+    public Queue<IGridRoom> MakeRandomizedRoomQueue()
+    {
+        // Taking the maximum size of our grid and dividing it by three roughly 
+        // gives us a value that approximates how many rooms we want to have.
+        // Note, that many rooms will overlap and/or be inside of each other.
+        // Many rooms will be replaced and lost, thus we have a higher number
+        // in rooms here than actually visible in the game!
+        var smallerSize = gridSize.X < gridSize.Y ? gridSize.X : gridSize.Y;
+        int desiredRoomCount = R.Next(smallerSize / 16, smallerSize / 2);
+
+        var result = new Queue<IGridRoom>();
+        while (result.Count() <= desiredRoomCount)
+        {
+            // Pick a random location
+            var roomLocationX = R.Next(0, gridSize.X - 1);
+            var roomLocationY = R.Next(0, gridSize.Y - 1);
+
+            // Calculate the maximum size 
+            var maxSizeX = gridSize.X - roomLocationX;
+            var maxSizeY = gridSize.Y - roomLocationY;
+
+            // Skip rooms that are too small
+            if (maxSizeX < roomSizeMinimum ||
+                maxSizeY < roomSizeMinimum) continue;
+
+            // Pick a maximum room size, based on the smaller value
+            var roomSizeX = R.Next(
+                roomSizeMinimum,
+                maxSizeX < roomSizeMaximum ? maxSizeX : roomSizeMaximum
             );
-            uint roomSizeY = (uint)R.Next(
-                (int)minRoomSize,
-                (int)(maxSizeY < maxRoomSize ? maxSizeY : maxRoomSize)
+            var roomSizeY = R.Next(
+                roomSizeMinimum,
+                maxSizeY < roomSizeMaximum ? maxSizeY : roomSizeMaximum
             );
 
-            var room = new GridRoomRectangular((roomLocationX, roomLocationY), (roomSizeX, roomSizeY), (uint)output.Count() + 1);
-            output.Add(room);
+            // Make the room construct and put it in the queue
+            var room = new GridRoomRectangular(
+                new Vector2I(roomLocationX, roomLocationY),
+                new Vector2I(roomSizeX, roomSizeY),
+                (uint)result.Count() + 1
+            );
+            result.Enqueue(room);
         }
 
-        return output;
+        return result;
     }
 
-    public void PlaceRooms(bool printToConsole = false)
+    public void PlaceRooms(Queue<IGridRoom> roomQueue)
     {
-        var rooms = MakeRandomRoomList();
-        PlaceRooms(rooms, printToConsole: printToConsole);
-    }
-
-    public void PlaceRooms(List<IGridRoom> rooms, bool printToConsole = false)
-    {
-        foreach (var room in rooms)
-            Grid = room.Apply(Grid);
-
-        RoomCount = (uint)rooms.Count();
-
-        if (printToConsole)
+        while (roomQueue.Count() > 0)
         {
-            GD.Print(">>> Placed rooms:");
-            PrintToConsole();
+            var room = roomQueue.Dequeue();
+            floorGrid = room.Apply(floorGrid);
         }
     }
 
-    public void FixAreas()
+    public void PerformAutomataRepetitive(int steps = 5)
     {
-        var floorsWithoutAreaList = FindCell((x, y, cell) => cell.IsFloor && cell.Area == 0);
-        var floorsWithoutArea = new Queue<(uint, uint)>(floorsWithoutAreaList.Count());
-        foreach (var a in floorsWithoutAreaList) floorsWithoutArea.Enqueue(a);
-
-        while (floorsWithoutArea.Count() > 0)
-        {
-            var cellPosition = floorsWithoutArea.Dequeue();
-
-            var cellN = GetCell((cellPosition.Item1 - 1, cellPosition.Item2));
-            if (cellN != null && cellN.Area > 0)
-            {
-                Grid[cellPosition.Item1, cellPosition.Item2].Area = cellN.Area;
-                continue;
-            }
-
-            var cellS = GetCell((cellPosition.Item1 + 1, cellPosition.Item2));
-            if (cellS != null && cellS.Area > 0)
-            {
-                Grid[cellPosition.Item1, cellPosition.Item2].Area = cellS.Area;
-                continue;
-            }
-
-            var cellE = GetCell((cellPosition.Item1, cellPosition.Item2 - 1));
-            if (cellE != null && cellE.Area > 0)
-            {
-                Grid[cellPosition.Item1, cellPosition.Item2].Area = cellE.Area;
-                continue;
-            }
-
-            var cellW = GetCell((cellPosition.Item1, cellPosition.Item2 + 1));
-            if (cellW != null && cellW.Area > 0)
-            {
-                Grid[cellPosition.Item1, cellPosition.Item2].Area = cellW.Area;
-                continue;
-            }
-
-            floorsWithoutArea.Enqueue(cellPosition);
-        }
-    }
-
-    public void PerformAutomataRepetitive(int steps = 5, bool printStepsToConsole = false)
-    {
-        if (printStepsToConsole)
-        {
-            GD.Print($">>> Automata Basis:");
-            PrintToConsole();
-        }
-
-        for (var step = 1; step <= steps; step++)
+        for (var step = 0; step < steps; step++)
         {
             PerformAutomata();
-
-            if (printStepsToConsole)
-            {
-                GD.Print($">>> Automata #{step}/{steps}:");
-                PrintToConsole();
-            }
         }
     }
 
     public void PerformAutomata()
     {
-        var outputGrid = new GridCell[SizeX + 1, SizeY + 1];
+        var outputGrid = new bool[gridSize.X, gridSize.Y];
 
-        for (uint x = 0; x <= SizeX; x++)
-            for (uint y = 0; y <= SizeY; y++)
-                outputGrid[x, y] = CountNeighboursOfType((x, y), isFloor: false, countNull: true) < MinimumNeighbourWallsForFloor
-                    ? new GridCell(isFloor: true)
-                    : new GridCell(isFloor: false);
+        for (var x = 0; x < gridSize.X; x++)
+            for (var y = 0; y < gridSize.Y; y++)
+                outputGrid[x, y] = CountWallNeighbours(
+                    new Vector2I(x, y),
+                    countNull: true) < minimumNeighbourWallsForFloor;
 
-        Grid = outputGrid;
+        floorGrid = outputGrid;
     }
 
-    public void AssignAreas(bool printStepsToConsole = false)
+    /// <summary>
+    /// Any existing area grid will be nulled.
+    /// 
+    /// It then will step through each X & Y coordinate
+    /// and check for floor areas that aren't assigned
+    /// an area id yet. For each unassigned area 
+    /// <see cref="AssignArea(Vector2I, uint)"/> is called.
+    /// Said function, will do the area assigning.
+    /// </summary>
+    public void AssignAreas()
     {
-        uint area = 1;
+        maxArea = 0;
+        areaGrid = new uint[gridSize.X, gridSize.Y];
 
-        var currentX = -1;
-        var currentY = 0;
+        uint currentArea = 1;
+        var currentPosition = new Vector2I(-1, 0);
         do
         {
             // Increment X & Y
-            if (currentX++ >= SizeX)
+            currentPosition += new Vector2I(1, 0);
+            if (currentPosition.X >= gridSize.X)
             {
-                currentX = 0;
-                // Break the loop if we are out of bounce
-                if (currentY++ >= SizeY)
+                currentPosition = new Vector2I(0, currentPosition.Y + 1);
+
+                // Break the loop if we reached the end
+                if (currentPosition.Y >= gridSize.Y)
                     break;
             }
 
             // If the cell at the current location is invalid, not a floor or already has an area assigned, skip it.
-            var cell = GetCell(((uint)currentX, (uint)currentY));
-            if (cell == null || !cell.IsFloor || cell.HasAreaData()) continue;
+            // Note: this has to stay in here to not advance the area counter
+            // This also is checked inside AssignArea.
+            var floorCell = GetFloorCell(currentPosition);
+            var areaCell = GetAreaCell(currentPosition);
+            if (!(floorCell ?? false) || areaCell != 0) continue;
 
             // Cell must be a floor AND in an area we haven't been in yet
-            AssignAreaNeighboursAndSelf(((uint)currentX, (uint)currentY), area);
-
-            if (printStepsToConsole)
-            {
-                GD.Print($">>> Area #{area}:");
-                PrintToConsole();
-            }
+            AssignArea(currentPosition, currentArea);
 
             // Increment area counter
-            area++;
+            currentArea++;
         } while (true);
 
         // Set counter
-        AreaCount = area;
+        maxArea = currentArea;
     }
 
-    public void AssignAreaNeighboursAndSelf((uint, uint) position, uint area)
+    public void AssignArea(Vector2I position, uint area)
     {
-        var cellSelf = GetCell(position);
+        // Skip any invalid cells
+        var floorCell = GetFloorCell(position);
+        var areaCell = GetAreaCell(position);
+        if (!(floorCell ?? false) || areaCell != 0) return;
 
-        // Skip invalid cells
-        if (cellSelf == null) return;
+        // Assign area
+        areaGrid[position.X, position.Y] = area;
 
-        // Skip already assigned areas
-        if (cellSelf.HasAreaData()) return;
+        // Recursively call this functions on any neighbour that is not null,
+        // i.e. exists, and is a floor
+        var positionN = position + new Vector2I(-1, 0);
+        var positionS = position + new Vector2I(1, 0);
+        var positionW = position + new Vector2I(0, -1);
+        var positionE = position + new Vector2I(0, 1);
 
-        // Skip non-floor cells
-        if (!cellSelf.IsFloor) return;
+        var cellN = GetFloorCell(positionN);
+        var cellS = GetFloorCell(positionS);
+        var cellW = GetFloorCell(positionW);
+        var cellE = GetFloorCell(positionE);
 
-        Grid[position.Item1, position.Item2].Area = area;
-
-        var cellN = GetCell((position.Item1 - 1, position.Item2));
-        if (cellN != null && cellN.IsFloor)
-        {
-            // Grid[position.Item1 - 1, position.Item2].Area = area;
-            AssignAreaNeighboursAndSelf((position.Item1 - 1, position.Item2), area);
-        }
-
-        var cellS = GetCell((position.Item1 + 1, position.Item2));
-        if (cellS != null && cellS.IsFloor)
-        {
-            // Grid[position.Item1 + 1, position.Item2].Area = area;
-            AssignAreaNeighboursAndSelf((position.Item1 + 1, position.Item2), area);
-        }
-
-        var cellE = GetCell((position.Item1, position.Item2 - 1));
-        if (cellE != null && cellE.IsFloor)
-        {
-            // Grid[position.Item1, position.Item2 - 1].Area = area;
-            AssignAreaNeighboursAndSelf((position.Item1, position.Item2 - 1), area);
-        }
-
-        var cellW = GetCell((position.Item1, position.Item2 + 1));
-        if (cellW != null && cellW.IsFloor)
-        {
-            // Grid[position.Item1, position.Item2 + 1].Area = area;
-            AssignAreaNeighboursAndSelf((position.Item1, position.Item2 + 1), area);
-        }
+        if (cellN ?? false)
+            AssignArea(positionN, area);
+        if (cellS ?? false)
+            AssignArea(positionS, area);
+        if (cellW ?? false)
+            AssignArea(positionW, area);
+        if (cellE ?? false)
+            AssignArea(positionE, area);
     }
 
-    public List<(uint, uint)> FindCell(Func<uint, uint, GridCell, bool> lambda)
+    public HashSet<Vector2I> FindCell(Func<Vector2I, bool, uint, bool, bool> lambda)
     {
-        var output = new List<(uint, uint)>();
+        var output = new HashSet<Vector2I>();
 
-        for (uint x = 0; x < SizeX; x++)
-            for (uint y = 0; y < SizeY; y++)
-                if (lambda.Invoke(x, y, Grid[x, y]))
-                    output.Add((x, y));
+        for (var x = 0; x < gridSize.X; x++)
+            for (var y = 0; y < gridSize.Y; y++)
+            {
+                var v = new Vector2I(x, y);
+
+                var floorCell = floorGrid[x, y];
+                var areaCell = areaGrid[x, y];
+                var doorCell = doorGrid[x, y];
+
+                if (lambda.Invoke(v, floorCell, areaCell, doorCell))
+                    output.Add(v);
+            }
 
         return output;
     }
 
-    public List<(uint, uint)> FindCellOfType(bool isFloor) => FindCell((x, y, cell) => cell.IsFloor == isFloor);
+    public HashSet<Vector2I> FindFloorCells() =>
+        FindCell((v, floor, area, door) => floor);
 
-    public List<(uint, uint)> FindCellOfArea(uint area) => FindCell((x, y, cell) => cell.IsFloor && cell.Area == area);
+    public HashSet<Vector2I> FindWallCells() =>
+    FindCell((v, floor, area, door) => !floor);
 
-    public List<(uint, uint)> FindCellOfRoom(uint room) => FindCell((x, y, cell) => cell.IsFloor && cell.Room == room);
+    public HashSet<Vector2I> FindDoorCells() =>
+            FindCell((v, floor, area, door) => door);
 
-    public GridCell? GetCell((int, int) position) => GetCell(Grid, ((uint)position.Item1, (uint)position.Item2));
+    public HashSet<Vector2I> FindAreaCells(uint targetArea) =>
+        FindCell((v, floor, area, door) => floor && area == targetArea);
 
-    public GridCell? GetCell((uint, uint) position) => GetCell(Grid, position);
-
-    public static GridCell? GetCell(GridCell[,] grid, (int, int) position) => GetCell(grid, ((int)position.Item1, (int)position.Item2));
-
-    public static GridCell? GetCell(GridCell[,] grid, (uint, uint) position)
+    public bool? GetFloorCell(Vector2I position)
     {
-        if (position.Item1 < 0 || position.Item2 < 0 || position.Item1 >= grid.GetUpperBound(0) || position.Item2 >= grid.GetUpperBound(1)) return null;
-        else return grid[position.Item1, position.Item2];
+        if (position.X < 0 ||
+            position.Y < 0 ||
+            position.X >= floorGrid.GetUpperBound(0) ||
+            position.Y >= floorGrid.GetUpperBound(1))
+            return null;
+        else
+            return floorGrid[position.X, position.Y];
     }
 
-    public uint CountNeighboursOfType((int, int) position, bool isFloor, bool countNull = true, bool interCardinalsToo = true) => CountNeighboursOfType(((uint)position.Item1, (uint)position.Item2), isFloor, countNull, interCardinalsToo);
+    public uint? GetAreaCell(Vector2I position)
+    {
+        if (position.X < 0 ||
+            position.Y < 0 ||
+            position.X >= floorGrid.GetUpperBound(0) ||
+            position.Y >= floorGrid.GetUpperBound(1))
+            return null;
+        else
+            return areaGrid[position.X, position.Y];
+    }
 
-    public uint CountNeighboursOfType((uint, uint) position, bool isFloor, bool countNull = true, bool interCardinalsToo = true)
+    public bool? GetDoorCell(Vector2I position)
+    {
+        if (position.X < 0 ||
+            position.Y < 0 ||
+            position.X >= floorGrid.GetUpperBound(0) ||
+            position.Y >= floorGrid.GetUpperBound(1))
+            return null;
+        else
+            return doorGrid[position.X, position.Y];
+    }
+
+    public uint CountWallNeighbours(Vector2I position, bool countNull = true, bool interCardinalsToo = true)
     {
         // Cardinals
-        var valueN = GetCell((position.Item1 - 1, position.Item2));
-        var valueS = GetCell((position.Item1 + 1, position.Item2));
-        var valueE = GetCell((position.Item1, position.Item2 - 1));
-        var valueW = GetCell((position.Item1, position.Item2 + 1));
+        var valueN = GetFloorCell(position + new Vector2I(-1, 0));
+        var valueS = GetFloorCell(position + new Vector2I(1, 0));
+        var valueE = GetFloorCell(position + new Vector2I(0, -1));
+        var valueW = GetFloorCell(position + new Vector2I(0, 1));
 
         if (!interCardinalsToo)
         {
-            return (uint)(0
-                + (valueN == null
-                    ? countNull ? 1 : 0
-                    : valueN.IsFloor == isFloor ? 1 : 0)
-                + (valueS == null
-                    ? countNull ? 1 : 0
-                    : valueS.IsFloor == isFloor ? 1 : 0)
-                + (valueE == null
-                    ? countNull ? 1 : 0
-                    : valueE.IsFloor == isFloor ? 1 : 0)
-                + (valueW == null
-                    ? countNull ? 1 : 0
-                    : valueW.IsFloor == isFloor ? 1 : 0)
-            );
+            // Cardinals
+            return (uint)(((valueN ?? countNull) ? 0 : 1)
+                + ((valueS ?? countNull) ? 0 : 1)
+                + ((valueW ?? countNull) ? 0 : 1)
+                + ((valueE ?? countNull) ? 0 : 1));
         }
         else
         {
             // Inter-Cardinals
-            var valueNE = GetCell((position.Item1 - 1, position.Item2 - 1));
-            var valueSE = GetCell((position.Item1 + 1, position.Item2 - 1));
-            var valueNW = GetCell((position.Item1 - 1, position.Item2 + 1));
-            var valueSW = GetCell((position.Item1 + 1, position.Item2 + 1));
+            var valueNE = GetFloorCell(position + new Vector2I(-1, -1));
+            var valueSE = GetFloorCell(position + new Vector2I(1, -1));
+            var valueNW = GetFloorCell(position + new Vector2I(-1, 1));
+            var valueSW = GetFloorCell(position + new Vector2I(1, 1));
 
-            return (uint)(0
-                + (valueN == null
-                    ? countNull ? 1 : 0
-                    : valueN.IsFloor == isFloor ? 1 : 0)
-                + (valueS == null
-                    ? countNull ? 1 : 0
-                    : valueS.IsFloor == isFloor ? 1 : 0)
-                + (valueE == null
-                    ? countNull ? 1 : 0
-                    : valueE.IsFloor == isFloor ? 1 : 0)
-                + (valueW == null
-                    ? countNull ? 1 : 0
-                    : valueW.IsFloor == isFloor ? 1 : 0)
-                + (valueNE == null
-                    ? countNull ? 1 : 0
-                    : valueNE.IsFloor == isFloor ? 1 : 0)
-                + (valueSE == null
-                    ? countNull ? 1 : 0
-                    : valueSE.IsFloor == isFloor ? 1 : 0)
-                + (valueNW == null
-                    ? countNull ? 1 : 0
-                    : valueNW.IsFloor == isFloor ? 1 : 0)
-                + (valueSW == null
-                    ? countNull ? 1 : 0
-                    : valueSW.IsFloor == isFloor ? 1 : 0)
-            );
+            return (uint)(((valueN ?? countNull) ? 0 : 1)
+                 + ((valueS ?? countNull) ? 0 : 1)
+                 + ((valueW ?? countNull) ? 0 : 1)
+                 + ((valueE ?? countNull) ? 0 : 1)
+                 + ((valueNE ?? countNull) ? 0 : 1)
+                 + ((valueSE ?? countNull) ? 0 : 1)
+                 + ((valueNW ?? countNull) ? 0 : 1)
+                 + ((valueSW ?? countNull) ? 0 : 1));
         }
     }
 
     public void PrintToConsole()
     {
         var output = "";
-        for (var y = 0; y < SizeY; y++)
+        for (var y = 0; y < gridSize.Y; y++)
         {
-            for (var x = 0; x < SizeX; x++)
-                output += Grid[x, y].GetCellString(y % 2 == 0);
+            for (var x = 0; x < gridSize.X; x++)
+            {
+                var v = new Vector2I(x, y);
+
+                // Portal location
+                if (x == portalLocation.X && y == portalLocation.Y)
+                    output += "PP";
+                // Doors
+                else if (GetDoorCell(v) ?? false)
+                    output += "░░";
+                // Area mapping
+                else if (GetAreaCell(v) > 0)
+                    output += GetAreaCell(v) < 10
+                        ? $"0{GetAreaCell(v)}"
+                        : $"{GetAreaCell(v)}";
+                // Default
+                else
+                    output += (GetFloorCell(v) ?? false)
+                        ? "  "
+                        : "██";
+            }
 
             output += "\n";
         }

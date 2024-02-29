@@ -207,4 +207,10 @@ public partial class DungeonGrid : Node3D
                 }
             }
     }
+
+    public Vector3 MapToLocal(Vector3I map)
+        => gridMap.MapToLocal(map);
+
+    public Vector3I LocalToMap(Vector3 local)
+        => gridMap.LocalToMap(local);
 }

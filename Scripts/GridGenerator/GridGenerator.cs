@@ -145,20 +145,19 @@ public class GridGenerator
 
     public void AssignPortalLocation()
     {
-        do
-        {
-            var pool = new HashSet<Vector2I>();
-            foreach (var roomCell in FindCell((v, floor, area, door) =>
-                floor &&
-                area > 0 &&
-                (GetFloorCell(v + new Vector2I(-1, 0)) ?? false) &&
-                (GetFloorCell(v + new Vector2I(1, 0)) ?? false) &&
-                (GetFloorCell(v + new Vector2I(0, -1)) ?? false) &&
-                (GetFloorCell(v + new Vector2I(0, 1)) ?? false)))
-                pool.Add(roomCell);
+        var pool = new HashSet<Vector2I>();
+        foreach (var roomCell in FindCell((v, floor, area, door) =>
+            floor &&
+            area > 0 &&
+            area != bossAreaId &&
+            !door &&
+            (GetFloorCell(v + new Vector2I(-1, 0)) ?? false) &&
+            (GetFloorCell(v + new Vector2I(1, 0)) ?? false) &&
+            (GetFloorCell(v + new Vector2I(0, -1)) ?? false) &&
+            (GetFloorCell(v + new Vector2I(0, 1)) ?? false)))
+            pool.Add(roomCell);
 
-            portalLocation = pool.ElementAt(R.Next(pool.Count));
-        } while (GetAreaCell(portalLocation) != bossAreaId);
+        portalLocation = pool.ElementAt(R.Next(pool.Count()));
     }
 
     public void AssignBossRoom()

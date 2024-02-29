@@ -26,6 +26,9 @@ public partial class DungeonGrid : Node3D
     [Export]
     public Vector2I dungeonSize = new Vector2I(70, 70);
 
+    [Export]
+    public double circularRoomChance { get; set; } = 0.33;
+
     [ExportGroup("Godot")]
     [Export]
     public Vector2I cellSizeOffset = new Vector2I(2, 2);
@@ -73,6 +76,7 @@ public partial class DungeonGrid : Node3D
             roomSizeMaximum = roomSizeMaximum,
             minimumNeighbourWallsForFloor = minimumNeighbourWallsForFloor,
             areaMinimumCells = areaMinimumCells,
+            circularRoomChance = circularRoomChance,
         };
         gridGenerator.Automate(dungeonSize);
 

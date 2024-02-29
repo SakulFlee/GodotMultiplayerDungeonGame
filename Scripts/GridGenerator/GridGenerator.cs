@@ -2,8 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
-using SIPSorcery.SIP;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 
 public class GridGenerator
 {
@@ -11,6 +10,7 @@ public class GridGenerator
     public int roomSizeMaximum { get; set; } = 30;
     public int minimumNeighbourWallsForFloor { get; set; } = 4;
     public int areaMinimumCells { get; set; } = 9;
+    public double circularRoomChance { get; set; } = 0.33;
 
     public Random R = Random.Shared;
 
@@ -420,11 +420,15 @@ public class GridGenerator
             );
 
             // Make the room construct and put it in the queue
-            var room = new GridRoomRectangular(
-                new Vector2I(roomLocationX, roomLocationY),
-                new Vector2I(roomSizeX, roomSizeY),
-                (uint)result.Count() + 1
-            );
+            IGridRoom room = R.NextDouble() > circularRoomChance
+                ? new GridRoomRectangular(
+                    new Vector2I(roomLocationX, roomLocationY),
+                    new Vector2I(roomSizeX, roomSizeY)
+                )
+                : new GridRoomCircular(
+                    new Vector2I(roomLocationX, roomLocationY),
+                    new Vector2I(roomSizeX, roomSizeY)
+                );
             result.Enqueue(room);
         }
 

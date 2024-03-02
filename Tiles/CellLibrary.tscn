@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://cysu2ljhgxi10"]
+[gd_scene load_steps=6 format=3 uid="uid://cysu2ljhgxi10"]
 
 [ext_resource type="PackedScene" uid="uid://o6whym1xrloa" path="res://Tiles/Stone/StoneWall.blend" id="1_3lwnj"]
 [ext_resource type="PackedScene" uid="uid://gck10qm8g25v" path="res://Tiles/Stone/StoneFloor1.blend" id="2_jk5lv"]
 [ext_resource type="PackedScene" uid="uid://b8g3fmih2w6ns" path="res://Tiles/Stone/StoneFloor2.blend" id="3_hgy77"]
 [ext_resource type="PackedScene" uid="uid://d3t3220k22dva" path="res://Tiles/Stone/StoneFloorTile.blend" id="4_jbipe"]
+[ext_resource type="PackedScene" uid="uid://v8npq4ux0wth" path="res://Tiles/Stone/StoneDoor.blend" id="5_kg307"]
 
 [node name="CellLibrary" type="Node3D"]
 
@@ -14,3 +15,5 @@
 [node name="StoneFloor2" parent="." instance=ExtResource("3_hgy77")]
 
 [node name="StoneFloorTile" parent="." instance=ExtResource("4_jbipe")]
+
+[node name="StoneDoor" parent="." instance=ExtResource("5_kg307")]

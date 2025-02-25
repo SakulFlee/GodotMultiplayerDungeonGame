@@ -106,11 +106,10 @@ public partial class Player : CharacterBody3D
 	{
 		var dungeonGrid = GetNode<DungeonGrid>("%DungeonGrid");
 
-		// TODO: X & Y might need to be swapped. Am unsure.
-		Position = dungeonGrid.MapToLocal(new Vector3I(
-			dungeonGrid.gridGenerator.portalLocation.X * dungeonGrid.cellSizeOffset.X,
+		Position = dungeonGrid.GridToLocal(new Vector3I(
+			dungeonGrid.gridGenerator.portalLocation.X * dungeonGrid.cellTranslationRatio.X,
 			0,
-			dungeonGrid.gridGenerator.portalLocation.Y * dungeonGrid.cellSizeOffset.Y
+			dungeonGrid.gridGenerator.portalLocation.Y * dungeonGrid.cellTranslationRatio.Y
 		));
 	}
 }

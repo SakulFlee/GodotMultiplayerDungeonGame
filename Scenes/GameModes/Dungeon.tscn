@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://d00vx5a6utcsu"]
+[gd_scene load_steps=8 format=3 uid="uid://d00vx5a6utcsu"]
 
 [ext_resource type="Script" path="res://Scripts/Components/DungeonGrid.cs" id="1_02r2w"]
 [ext_resource type="PackedScene" uid="uid://b45p4okt83mw0" path="res://Scenes/UI/DungeonUI.tscn" id="1_du1sn"]
-[ext_resource type="MeshLibrary" uid="uid://cckyw6vl4dknq" path="res://Tiles/CellLibrary.tres" id="2_ywbdo"]
 [ext_resource type="PackedScene" uid="uid://da6bmqp6hwakk" path="res://Scenes/Entities/Player.tscn" id="3_h4y0j"]
 [ext_resource type="Environment" uid="uid://c8qgofxugcik8" path="res://Resources/WorldEnv/OverviewCameraEnv.tres" id="4_03rxr"]
+[ext_resource type="PackedScene" uid="uid://gck10qm8g25v" path="res://Tiles/Stone/StoneFloor1.blend" id="4_ud7qj"]
+[ext_resource type="PackedScene" uid="uid://b8g3fmih2w6ns" path="res://Tiles/Stone/StoneFloor2.blend" id="5_xcbve"]
+[ext_resource type="PackedScene" uid="uid://o6whym1xrloa" path="res://Tiles/Stone/StoneWall.blend" id="6_3qtco"]
 
 [node name="Dungeon" type="Node3D"]
 metadata/_edit_lock_ = true
@@ -71,13 +73,8 @@ size = 450.0
 [node name="DungeonGrid" type="Node3D" parent="Game"]
 unique_name_in_owner = true
 script = ExtResource("1_02r2w")
-meshLibrary = ExtResource("2_ywbdo")
-floorTiles = [1, 2]
-wallTiles = [0]
-printGeneratorResultToConsole = true
+floorTiles = [ExtResource("4_ud7qj"), ExtResource("5_xcbve")]
+wallTiles = [ExtResource("6_3qtco")]
 metadata/_edit_lock_ = true
 
 [node name="Player" parent="Game" instance=ExtResource("3_h4y0j")]
-
-[connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="UI/DungeonUI" method="onDungeonGridFinished"]
-[connection signal="DungeonGridFinished" from="Game/DungeonGrid" to="Game/Player" method="onDungeonGridFinished"]

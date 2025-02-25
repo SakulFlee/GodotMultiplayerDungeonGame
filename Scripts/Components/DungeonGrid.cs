@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot.Collections;
 
 [GlobalClass]
@@ -29,47 +30,57 @@ public partial class DungeonGrid : Node3D
     [Export]
     public double circularRoomChance { get; set; } = 0.33;
 
-    [ExportGroup("Godot")]
+    /// <summary>
+    /// Defines how many cells will be placed down inside Godot from a single
+    /// tile inside <see cref="GridGenerator"/>.
+    /// </summary>
     [Export]
-    public Vector2I cellSizeOffset = new Vector2I(2, 2);
+    public Vector2I cellTranslationRatio = new Vector2I(2, 2);
+
+    /// <summary>
+    /// How big each cell is and thus how much coordinates get shifted.
+    ///
+    /// For example:
+    /// If this is (1, 1), then any (X, Y) coordinate will be at (X, Y).
+    /// But, if this is (2, 2) instead, then (X, Y) will be at (X * 2, Y * 2).
+    /// 
+    /// <see cref="GridToLocal(Vector3I)"/> and 
+    /// <see cref="LocalToGrid(Vector3I)"/> take this into account.
+    /// Use these methods for properly translating coordinates.
+    /// </summary>
+    [Export]
+    public Vector3I cellOffset = new Vector3I(2, 2, 3);
 
     [ExportGroup("Cells")]
     [Export]
-    public MeshLibrary meshLibrary { get; set; }
+    public Array<PackedScene> floorTiles = new();
 
     [Export]
-    public Array<int> floorTiles = new();
-
-    [Export]
-    public Array<int> wallTiles = new();
+    public Array<PackedScene> wallTiles = new();
 
     [ExportGroup("Debug")]
     [Export]
-    public bool printGeneratorResultToConsole = false;
+    public bool printGeneratorResultToConsole = true;
 
     [Signal]
-    public delegate void DungeonGridFinishedEventHandler(int seed);
+    public delegate void DungeonGridPopulationFinishedEventHandler(int seed);
 
     public GridGenerator gridGenerator { get; private set; }
 
-    private GridMap gridMap = new();
+    private List<Node3D> instances = new();
 
     public override void _EnterTree()
     {
-        if (meshLibrary == null) GD.PrintErr("[DungeonGrid] Mesh Library not set!");
         if (floorTiles.Count() == 0) GD.PrintErr("[DungeonGrid] No Floor cells set!");
         if (wallTiles.Count() == 0) GD.PrintErr("[DungeonGrid] No Wall cells set!");
     }
 
     public override void _Ready()
     {
-        AddChild(gridMap);
-        gridMap.MeshLibrary = meshLibrary;
-
         if (seed < 0) seed = Random.Shared.Next(int.MaxValue);
         GD.Print($"[DungeonGrid] Seed: {seed}");
 
-        // Keep generating until a valid dungeon appears.
+        // Generate a dungeon
         gridGenerator = new GridGenerator(seed: seed)
         {
             roomSizeMinimum = roomSizeMinimum,
@@ -84,14 +95,72 @@ public partial class DungeonGrid : Node3D
             gridGenerator.PrintToConsole();
 
         PlaceGeneratorOutput();
-        FixCorners();
+        // FixCorners();
 
-        EmitSignal(SignalName.DungeonGridFinished, seed);
+        EmitSignal(SignalName.DungeonGridPopulationFinished, seed);
     }
 
-    public int PickTile(bool isFloor) => isFloor
+    public PackedScene PickTile(bool isFloor) => isFloor
         ? floorTiles[gridGenerator.R.Next(0, floorTiles.Count())]
         : wallTiles[gridGenerator.R.Next(0, wallTiles.Count())];
+
+    /// <summary>
+    /// Takes a grid-space coordinate (i.e. coordinate inside 
+    /// <see cref="GridGenerator"/>) and translates it to a 
+    /// local-space coordinate (i.e. local to us).
+    /// 
+    /// An alternative way of thinking about this is this:
+    /// "grid-space" refers to a coordinate used by the
+    /// <see cref="GridGenerator"/>.
+    /// It is a pure coordinate, without any offsets.
+    /// A single digit, be it X or Y, is always the same uniform
+    /// scaling and you'd expect one cell to be at (0, 0), the next at (0, 1),
+    /// and so on.
+    /// 
+    /// "local-space" refers to a coordinate WITH offsets.
+    /// When placing down a cell, the cells can have different sizes,
+    /// making (0, 0) and (0, 1) the same tile (also (1, 0) and (1, 1)).
+    /// To avoid this, we convert these pure grid coordinates and apply
+    /// offsets to them.
+    /// 
+    /// <seealso cref="LocalToGrid(Vector3I)"/>
+    /// </summary>
+    /// <param name="gridCoordinate">Input coordinate, must be grid-space</param>
+    /// <returns>Translated coordinate in local-space</returns>
+    public Vector3I GridToLocal(Vector3I gridCoordinate) =>
+        new Vector3I(
+            gridCoordinate.X * cellOffset.X,
+            gridCoordinate.Y * cellOffset.Y,
+            gridCoordinate.Z * cellOffset.Z);
+
+    /// <summary>
+    /// Takes a local-space coordinate (i.e. local to us) and translates 
+    /// it to a grid-space coordinate (i.e. coordinate inside 
+    /// <see cref="GridGenerator"/>)).
+    /// 
+    /// An alternative way of thinking about this is this:
+    /// "grid-space" refers to a coordinate used by the
+    /// <see cref="GridGenerator"/>.
+    /// It is a pure coordinate, without any offsets.
+    /// A single digit, be it X or Y, is always the same uniform
+    /// scaling and you'd expect one cell to be at (0, 0), the next at (0, 1),
+    /// and so on.
+    /// 
+    /// "local-space" refers to a coordinate WITH offsets.
+    /// When placing down a cell, the cells can have different sizes,
+    /// making (0, 0) and (0, 1) the same tile (also (1, 0) and (1, 1)).
+    /// To avoid this, we convert these pure grid coordinates and apply
+    /// offsets to them.
+    /// 
+    /// <seealso cref="GridToLocal(Vector3I)"/>
+    /// </summary>
+    /// <param name="localCoordinate">Input coordinate, must be local-space</param>
+    /// <returns>Translated coordinate in grid-space</returns>
+    public Vector3I LocalToGrid(Vector3I localCoordinate) =>
+        new Vector3I(
+            localCoordinate.X / cellOffset.X,
+            localCoordinate.Y / cellOffset.Y,
+            localCoordinate.Z / cellOffset.Z);
 
     public void PlaceGeneratorOutput()
     {
@@ -108,13 +177,13 @@ public partial class DungeonGrid : Node3D
                     interCardinalsToo: false);
                 if (wallCount > 3) continue;
 
-                int tileToPlace;
+                PackedScene cellToPlace;
 
                 var doorCell = gridGenerator.GetDoorCell(v) ?? false;
                 if (doorCell)
                 {
                     // There should be a door here. We will handle this later, for now just set a floor tile.
-                    tileToPlace = PickTile(true);
+                    cellToPlace = PickTile(true);
                 }
                 else
                 {
@@ -122,20 +191,21 @@ public partial class DungeonGrid : Node3D
                     // Pick a (randomized!) floor or wall tile from the pool,
                     // based on if the cell in the generator is a floor or not. 
                     var cell = gridGenerator.GetFloorCell(v) ?? false;
-                    tileToPlace = PickTile(cell);
+                    cellToPlace = PickTile(cell);
                 }
 
-                for (var a = 0; a < cellSizeOffset.X; a++)
-                    for (var b = 0; b < cellSizeOffset.Y; b++)
-                        // Set the chosen tile!
-                        gridMap.SetCellItem(
-                            new Vector3I(
-                                x * cellSizeOffset.X + a,
-                                0,
-                                y * cellSizeOffset.Y + b
-                            ),
-                            tileToPlace
+                // Set the chosen tile.
+                for (var a = 0; a < cellTranslationRatio.X; a++)
+                    for (var b = 0; b < cellTranslationRatio.Y; b++)
+                    {
+                        var instance = cellToPlace.Instantiate<Node3D>();
+                        instance.Position = new Vector3I(
+                            x * cellTranslationRatio.X + a,
+                            0,
+                            y * cellTranslationRatio.Y + b
                         );
+                        AddChild(instance, @internal: InternalMode.Back);
+                    }
             }
     }
 
@@ -191,26 +261,21 @@ public partial class DungeonGrid : Node3D
                     (cellSW ?? false) ||
                     (cellNW ?? false))
                 {
-                    int tileToPlace = PickTile(isFloor: false);
+                    var cellToPlace = PickTile(isFloor: false);
 
-                    for (var a = 0; a < cellSizeOffset.X; a++)
-                        for (var b = 0; b < cellSizeOffset.Y; b++)
-                            // Set the chosen tile!
-                            gridMap.SetCellItem(
-                                new Vector3I(
-                                    x * cellSizeOffset.X + a,
-                                    0,
-                                    y * cellSizeOffset.Y + b
-                                ),
-                                tileToPlace
+                    // Set the chosen tile
+                    for (var a = 0; a < cellTranslationRatio.X; a++)
+                        for (var b = 0; b < cellTranslationRatio.Y; b++)
+                        {
+                            var instance = cellToPlace.Instantiate<Node3D>();
+                            instance.Position = new Vector3I(
+                                x * cellTranslationRatio.X + a,
+                                0,
+                                y * cellTranslationRatio.Y + b
                             );
+                            AddChild(instance, @internal: InternalMode.Back);
+                        }
                 }
             }
     }
-
-    public Vector3 MapToLocal(Vector3I map)
-        => gridMap.MapToLocal(map);
-
-    public Vector3I LocalToMap(Vector3 local)
-        => gridMap.LocalToMap(local);
 }

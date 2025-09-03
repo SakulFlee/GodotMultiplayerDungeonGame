@@ -33,7 +33,7 @@ jobs:
           apt-get upgrade -y
           apt-get install -y curl unzip libicu-dev
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         name: Setup .NET SDK
         with:
           dotnet-version: ${{ env.CSharpVersion }}

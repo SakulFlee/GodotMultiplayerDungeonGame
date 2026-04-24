@@ -21,7 +21,7 @@ jobs:
         godot-version: [4.2.1]
 
     runs-on: self-hosted
-    container: ubuntu:lunar-20231128
+    container: ubuntu:26.04
 
     steps:
       - uses: actions/checkout@v4

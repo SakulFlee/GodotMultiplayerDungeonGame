@@ -24,7 +24,7 @@ jobs:
     container: ubuntu:lunar-20231128
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         name: Checkout
 
       - name: APT update

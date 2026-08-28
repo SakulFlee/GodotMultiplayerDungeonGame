@@ -38,7 +38,7 @@ jobs:
         with:
           dotnet-version: ${{ env.CSharpVersion }}
 
-      - uses: chickensoft-games/setup-godot@v1.5.6
+      - uses: chickensoft-games/setup-godot@v2.4.2
         name: Setup Godot
         with:
           # Version must include major, minor, and patch, and be >= 4.0.0
